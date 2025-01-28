@@ -55,7 +55,7 @@ class CCCPolicyAssistant:
 
         self.llm_model = "gemini-1.5-pro"
          # self.llm_model = "gemini-2.0-flash-exp"
-        self.llm_model_max_output_tokens = 2048
+        self.llm_model_max_output_tokens = 8192
         self.llm_model_temperature = 0.2
         self.llm_model_top_p = 0.8
         self.llm_model_top_k = 40
@@ -83,7 +83,7 @@ class CCCPolicyAssistant:
         self.prompt_template = ("You are a California Community College AI assistant. "
                                 "Use the following pieces of context and your knowledge base "
                                 "If the context does not contain the answer use your "
-                                "training to answer. Your response should be less than 5 sentences. "
+                                "training to answer. Your response should be between 5 and 10 sentences. "
                                 )
         self.chat_hist_memory_key = "chat_history"
         self.chat_hist_return_messages = True
@@ -109,7 +109,11 @@ class CCCPolicyAssistant:
                       location=self.gcp_location)
 
         ### Step 3. Instantiate an LLM
-        self.llm = ChatVertexAI(model=self.llm_model)
+        self.llm = ChatVertexAI(model=self.llm_model,
+                                temperature=self.llm_model_temperature,
+                                max_output_tokens=self.llm_model_max_output_tokens,
+                                top_k=self.llm_model_top_k,
+                                top_p=self.llm_model_top_p)
 
         ### Step 4. Establish an embeddings model
         self.embeddings = VertexAIEmbeddings(model=self.embedding_model)
