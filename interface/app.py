@@ -106,20 +106,6 @@ with st.sidebar:
         version_msg = ("Version : " + st.session_state["bot"].version)
         st.markdown(version_msg)
 
-
-########## Handle conversations in Streamlit
-# Build session components if needed
-# if "chat_history" not in st.session_state:
-#     st.session_state.chat_history = []
-#
-# if "bot" not in st.session_state:
-#     # st.session_state["bot"] = rb1.CCCPolicyAssistant()
-#     st.session_state["bot"] = CCCPolicyAssistant()
-#     # st.write(st.session_state["bot"])
-#
-# if "messages" not in st.session_state:
-#     st.session_state.messages = []
-
 # displays the chat history when app is rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
