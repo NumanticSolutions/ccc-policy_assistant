@@ -78,7 +78,7 @@ with st.sidebar:
     with tab2:
         st.header("Terms & Privacy")
         terms_url = "https://numanticsolutions.com/#terms"
-        terms_msg = ("The full terms of use can be found [here]({}).").format(github_url)
+        terms_msg = ("The full terms of use can be found [here]({}).").format(terms_url)
         st.markdown(terms_msg)
 
         privacy_url = "https://numanticsolutions.com/#privacy"
