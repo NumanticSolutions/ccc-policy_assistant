@@ -12,11 +12,11 @@ RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the app code
-#COPY . .
-COPY ./.streamlit/. /.streamlit/
-COPY ./data/. /data/
-COPY ./rag/. /rag/
-COPY ./utils/. /utils/
+COPY . .
+# COPY ./.streamlit/. /.streamlit/
+# COPY ./data/. /data/
+# COPY ./rag/. /rag/
+# COPY ./utils/. /utils/
 
 # Run the Streamlit app
 CMD ["streamlit", "run", "app.py", "--server.port=8080", "--server.address=0.0.0.0"]
