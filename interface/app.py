@@ -56,6 +56,24 @@ st.text(bot_summary)
 st.markdown(invite)
 st.divider()
 
+########## Handle conversations in Streamlit
+# Build session components if needed
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+if "bot" not in st.session_state:
+    # st.session_state["bot"] = rb1.CCCPolicyAssistant()
+    st.session_state["bot"] = CCCPolicyAssistant()
+    # st.write(st.session_state["bot"])
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# displays the chat history when app is rerun
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
 with st.sidebar:
     sidebar_msg = ("This is an experimental chatbot that is still under development. "
                    "Please reach out with feedback, suggestions and comments."
@@ -85,19 +103,22 @@ with st.sidebar:
         privacy_msg = ("A complete privacy policy is [here]({}). Note that for this assistant, sessions are logged for testing and development purposes.").format(privacy_url)
         st.markdown(privacy_msg)
 
+        version_msg = ("Version : " + st.session_state["bot"].version)
+        st.markdown(version_msg)
+
 
 ########## Handle conversations in Streamlit
 # Build session components if needed
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-if "bot" not in st.session_state:
-    # st.session_state["bot"] = rb1.CCCPolicyAssistant()
-    st.session_state["bot"] = CCCPolicyAssistant()
-    # st.write(st.session_state["bot"])
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# if "chat_history" not in st.session_state:
+#     st.session_state.chat_history = []
+#
+# if "bot" not in st.session_state:
+#     # st.session_state["bot"] = rb1.CCCPolicyAssistant()
+#     st.session_state["bot"] = CCCPolicyAssistant()
+#     # st.write(st.session_state["bot"])
+#
+# if "messages" not in st.session_state:
+#     st.session_state.messages = []
 
 # displays the chat history when app is rerun
 for message in st.session_state.messages:
