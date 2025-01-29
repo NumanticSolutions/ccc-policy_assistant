@@ -102,7 +102,7 @@ class CCCPolicyAssistant:
         # os.environ["LANGCHAIN_API_KEY"] = creds.apis_configs["LANGCHAIN_API_KEY"] # 2501
 
         # Google
-        os.environ["GOOGLE_API_KEY"] = creds.apis_configs["GOOGLE_API_KEY"]
+        # os.environ["GOOGLE_API_KEY"] = creds.apis_configs["GOOGLE_API_KEY"]
 
         ### Step 2: Initialize Vertex AI
         vertexai.init(project=self.gcp_project_id,
