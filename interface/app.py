@@ -60,7 +60,7 @@ with st.sidebar:
     sidebar_msg = ("This is an experimental chatbot that is still under development. "
                    "Please reach out with feedback, suggestions and comments."
                    )
-    github_url = "https://github.com/NumanticSolutions/ccc_policy_assistant"
+    github_url = "https://github.com/NumanticSolutions/ccc-policy_assistant"
     github_msg = ("Code can be found at [github.com/NumanticSolutions]({})").format(github_url)
 
     st.header(sidebar_msg)
@@ -77,7 +77,13 @@ with st.sidebar:
         st.text("• What are the responsibilities of the board members of a California community college?")
     with tab2:
         st.header("Terms & Privacy")
-        st.text("Add a terms and privacy statement here, note sessions are logged for testing and development.")
+        terms_url = "https://numanticsolutions.com/#terms"
+        terms_msg = ("The full terms of use can be found [here]({}).").format(github_url)
+        st.markdown(terms_msg)
+
+        privacy_url = "https://numanticsolutions.com/#privacy"
+        privacy_msg = ("A complete privacy policy is [here]({}). Note that for this assistant, sessions are logged for testing and development purposes.").format(privacy_url)
+        st.markdown(privacy_msg)
 
 
 ########## Handle conversations in Streamlit
@@ -135,7 +141,8 @@ if user_input:
 
     # Extract the AI response and add URls for context
     # ai_response = "{} These references might be useful: {}".format(response["answer"], s)
-    ai_response = "{} These references might be useful: {}".format(st.session_state["bot"].ai_response, s)
+    if len(context_urls) > 0:
+        ai_response = "{} These references might be useful: {}".format(st.session_state["bot"].ai_response, s)
 
     # Store AI's response in the chat history
     st.session_state.messages.append({"role": "assistant", "content": ai_response})
