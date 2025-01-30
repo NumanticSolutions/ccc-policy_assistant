@@ -1,3 +1,7 @@
+# © 2025 Numantic Solutions LLC
+# MIT License
+#
+
 # Class for scraping websites
 # Built using Pyppeteer
 

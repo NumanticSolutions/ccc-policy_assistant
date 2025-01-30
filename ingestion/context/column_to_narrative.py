@@ -1,4 +1,5 @@
-# [2412]
+# © 2025 Numantic Solutions LLC
+# MIT License
 #
 
 import pandas as pd

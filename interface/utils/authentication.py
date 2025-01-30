@@ -1,3 +1,7 @@
+# © 2025 Numantic Solutions LLC
+# MIT License
+#
+
 import os
 import json
 

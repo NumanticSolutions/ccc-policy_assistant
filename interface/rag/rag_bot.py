@@ -1,3 +1,7 @@
+# © 2025 Numantic Solutions LLC
+# MIT License
+#
+
 import sys, os
 import re
 from langchain_core.tools import tool

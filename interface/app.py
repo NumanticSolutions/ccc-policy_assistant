@@ -1,4 +1,7 @@
-# [2412]
+# © 2025 Numantic Solutions LLC
+# MIT License
+#
+
 #
 # * A retrieval-centric interface for CCC-PA
 #
@@ -33,6 +36,8 @@ streamlit_style = """
 			</style>
 			"""
 st.markdown(streamlit_style, unsafe_allow_html=True)
+
+st.set_page_config(page_title="CCC-PA")
 
 images_path = "data/images"
 logo_file = "Numantic Solutions_Logotype_light.png"

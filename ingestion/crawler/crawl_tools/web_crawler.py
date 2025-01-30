@@ -1,3 +1,7 @@
+# © 2025 Numantic Solutions LLC
+# MIT License
+#
+
 # Class for crawling and scraping multiple websites
 
 import sys, os

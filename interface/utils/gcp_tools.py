@@ -1,3 +1,7 @@
+# © 2025 Numantic Solutions LLC
+# MIT License
+#
+
 # GCP
 # from google.cloud import secretmanager
 from google.cloud import storage
