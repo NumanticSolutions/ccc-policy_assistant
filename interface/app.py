@@ -23,6 +23,8 @@ sys.path.insert(0, "rag")
 sys.path.insert(0, "utils")
 from rag_bot import CCCPolicyAssistant
 
+st.set_page_config(page_title="CCC-PA")
+
 ########## Set up Streamlit
 font_url = ("https://fonts.googleapis.com/css2?family=Lato:ital,wght"
             "@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap")
@@ -36,8 +38,6 @@ streamlit_style = """
 			</style>
 			"""
 st.markdown(streamlit_style, unsafe_allow_html=True)
-
-st.set_page_config(page_title="CCC-PA")
 
 images_path = "data/images"
 logo_file = "Numantic Solutions_Logotype_light.png"
