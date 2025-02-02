@@ -31,7 +31,7 @@ class ApiAuthentication:
 
         '''
 
-        self.dotenv_path = "data/environment"
+        self.dotenv_path = "../../data/environment"
         self.cred_source = "dotenv"
         self.service_acct_file = "eternal-bongo-435614-b9-bf6a5e630e44.json"
 
