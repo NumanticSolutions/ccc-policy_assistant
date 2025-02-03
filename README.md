@@ -1,4 +1,4 @@
-<h1>$\textsf{\color{#ed8428}{California Community College Policy Assistant       |}}$ <img src="./data/images/Numantic Solutions_Logomark_orange.png" alt="NS" style="float:right;width:100px;height:62px;"></h1>
+<h1>$\textsf{\color{#ed8428}{California Community College Policy Assistant}}$ <img src="./data/images/Numantic Solutions_Logomark_orange.png" alt="NS" style="float:right;width:75px;height:40px;"></h1>
 
 
 
