@@ -10,6 +10,7 @@ import google.oauth2.credentials
 from google.auth import compute_engine
 import google.auth.transport.requests
 import os
+import pandas_gbq as gbq
 
 # def get_gcpsecrets(project_id,
 #                    secret_id,
@@ -38,7 +39,7 @@ import os
 #     # Note: response.payload.data is a bytes object, decode it to a string
 #     return response.payload.data.decode("UTF-8")
 
-def table_exists(dataset_id, table_id):
+def table_exists(project_id, dataset_id, table_id):
     '''
     Function to determine if a BigQuery dataset table exists
     :param dataset_id:
@@ -47,9 +48,9 @@ def table_exists(dataset_id, table_id):
     '''
     try:
         sql = ("SELECT 1 FROM `{}.{}` LIMIT 0").format(dataset_id, table_id)
-        pandas_gbq.read_gbq(sql,  project_id=project_id)
+        gbq.read_gbq(sql,  project_id=project_id)
         return True
-    except pandas_gbq.gbq.GenericGBQException as e:
+    except gbq.gbq.GenericGBQException as e:
         if "Not found" in str(e):
             return False
         else:
