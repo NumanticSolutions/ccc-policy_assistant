@@ -52,14 +52,14 @@ class webCrawler():
 
         # Counts
         self.crawl_cnt = 0  # Number of sites crawled
+        self.files_cnt = 0  # Number of files downloaded
         self.crawl_results_cnt = 0 # Number of sites producing crawl results
         self.saved_batch_cnt = 0  # Number of saved batches
 
         # Path to crawl results data local storage
-        self.results_path = ("/Users/stephengodfrey/OneDrive - numanticsolutions.com/"
-                             "Engagements/Projects/ccc_policy_assistant/data/crawls")
+        self.results_path = ""
         self.gcp_project_id = "eternal-bongo-435614-b9"
-        self.gcs_bucket_name = "webfiles-test"
+        self.gcs_bucket_name = "ccc-crawl_data"
         self.gcs_directory = ""
         self.storage_client = storage.Client(project=self.gcp_project_id)
         self.bucket = self.storage_client.bucket(self.gcs_bucket_name)
@@ -72,6 +72,13 @@ class webCrawler():
 
         # Seed url
         self.seed_url = seed_url
+
+        # Good domains - if blank only the seed url
+        # If not blank it will be overwritten when keywords are updated
+        self.good_domains = [urlparse(self.seed_url).netloc]
+
+        # Show URLs that are being crawled
+        self.verbose = False
 
         # Update any key word args
         self.__dict__.update(kwargs)
@@ -134,20 +141,29 @@ class webCrawler():
     
             ##  Step 2c: Create a new list of URLs found at this depth level
             found_urls = []
-    
+
             ## Step 2d: Crawl all randomly selected URLs
             # print("Depth level: {}: {} URLs".format(depth_cnt, len(r_urls)))
             for r_url in r_urls:
-    
+
                 ## Step 2e: Check if this URL is on the dont_craw_list
-                if r_url not in dont_crawl_urls:
+                if r_url not in dont_crawl_urls and self.is_good_domain(r_url) == True:
+
+                    if self.verbose:
+                        print(r_url)
 
                     ## Step 2e. Check if this is a file download
                     if self.is_file_url(r_url):
 
                         # Download file to a GCP bucket
-                        wfd.webFileDownloader(url=r_url,
-                                              gcp_directory=self.gcs_directory)
+                        fd_obj = wfd.webFileDownloader(url=r_url,
+                                      gcs_directory=os.path.join("{}/files".format(self.gcs_directory)))
+
+                        dd_res = fd_obj.download_document()
+
+                        ## Step 2f: Crawl and pause
+                        if dd_res != -1:
+                            self.files_cnt += 1
 
                     else:
 
@@ -186,6 +202,10 @@ class webCrawler():
                     ## Step 2j: Check if this job is hitting a crawl maximum and should stop
                     if self.crawl_cnt >= self.max_crawls:
                         break
+
+                else:
+
+                    dont_crawl_urls.append(r_url)
     
             ## Step 2j: Eliminate dups in found_urls
             found_urls = list(set(found_urls))
@@ -198,16 +218,16 @@ class webCrawler():
             to_crawl_urls = [u for u in found_urls if u not in dont_crawl_urls]
     
             ## Step 2m: Update User
-            msg = ("Depth level finished: {}: {} URLs crawled; {} URLs in to_crawl_urls; "
-                   "{} URLs in dont_crawl_urls").format(depth_cnt,
-                                                        self.crawl_cnt,
-                                                        len(to_crawl_urls),
-                                                        len(dont_crawl_urls))
+            msg = ("Depth level finished: {}: {} URLs crawled; {} files downloaded; "
+                   "{} URLs in to_crawl_urls; {} URLs in dont_crawl_urls").format(depth_cnt,
+                                                                                  self.crawl_cnt,
+                                                                                  self.files_cnt,
+                                                                                  len(to_crawl_urls),
+                                                                                  len(dont_crawl_urls))
             print(msg)
     
         ### Step 2n:. Save results not already yet saved
         self.save_results_batch(all_sites_results=all_sites_results)
-
 
     def save_results_batch(self, all_sites_results):
         '''
@@ -242,9 +262,8 @@ class webCrawler():
             df = pd.DataFrame(data=all_sites_results)
 
             # Save data in a CSV file
-            blob = self.bucket.blob(os.path.join(self.gcs_directory, res_filename))
+            blob = self.bucket.blob(os.path.join("{}/crawls".format(self.gcs_directory),res_filename))
             blob.upload_from_string(df.to_csv(), 'text/csv')
-
             # df.to_csv(path_or_buf=os.path.join(self.results_path, res_filename))
 
             ## Update User
@@ -268,3 +287,19 @@ class webCrawler():
                 is_file_url_result = True
 
         return is_file_url_result
+
+    def is_good_domain(self, url):
+        '''
+        Method to determine if the URL points to a bad domain
+        '''
+
+
+        is_good = False
+
+        purl = urlparse(url)
+        for bd in self.good_domains:
+            if purl.netloc.find(bd) >= 0:
+                is_good = True
+
+        return is_good
+

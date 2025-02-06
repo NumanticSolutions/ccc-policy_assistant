@@ -12,6 +12,10 @@ import requests
 import tqdm
 from google.cloud import storage
 
+import warnings
+
+warnings.filterwarnings("ignore")
+
 
 class webFileDownloader:
     '''
@@ -28,7 +32,7 @@ class webFileDownloader:
 
     '''
 
-    def __init__(self, url):
+    def __init__(self, url, **kwargs):
         '''
         Initialize class
         '''
@@ -37,32 +41,26 @@ class webFileDownloader:
         self.url = url
 
         # Path to crawl results data local storage
-        self.file_storage_path = ("/Users/stephengodfrey/OneDrive - numanticsolutions.com/"
-                                  "Engagements/Projects/ccc_policy_assistant/data/testfiles")
+        self.file_storage_path = ""
         self.gcp_project_id = "eternal-bongo-435614-b9"
-        self.gcs_bucket_name = "webfiles-test"
-        self.gcs_directory = "ipeds"
+        self.gcs_bucket_name = "ccc-crawl_data"
+        self.gcs_directory = ""
         self.storage_client = storage.Client(project=self.gcp_project_id)
         self.bucket = self.storage_client.bucket(self.gcs_bucket_name)
 
         # Acceptable file extensions
         self.good_file_extentions = [".zip", ".pdf", ".csv"]
 
-        # Show progress bar
-        self.show_progress_bar = False
-
         # File download chunk size
         self.chunk_size = 8192
 
-        # Check if acceptable
-        if self.validate_filename():
+        # Show warnings - note requests verify parameter
+        self.show_warnings = False
+        if not self.show_warnings:
+            warnings.filterwarnings("ignore")
 
-            # Create output directory if it doesn't exist
-            os.makedirs(self.file_storage_path, exist_ok=True)
-
-
-            # Download the file
-            self.download_document()
+        # Update any key word args
+        self.__dict__.update(kwargs)
 
 
     def validate_filename(self):
@@ -91,32 +89,27 @@ class webFileDownloader:
         Method to download the file from a URL.
         '''
 
+        # Check if valid file type
+        if self.validate_filename() == False:
+            return -1
 
         try:
-            response = requests.get(self.url, stream=True)
+            response = requests.get(self.url, stream=True, verify=False)
             response.raise_for_status()
 
             # Get file size
             self.total_file_size = int(response.headers.get('content-length', 0))
 
-            if self.show_progress_bar:
-                # with open(os.path.join(self.file_storage_path,
-                #                        self.filebasename), 'wb') as file, tqdm(desc= self.filebasename,
-                #                                                                total=self.total_file_size,
-                #                                                                unit='iB',
-                #                                                                unit_scale=True) as progress_bar:
-                #     for data in response.iter_content(chunk_size=self.chunk_size):
-                #         size = file.write(data)
-                #         progress_bar.update(size)
-                pass
 
-            else:
-                blob = self.bucket.blob(os.path.join(self.gcs_directory, self.filebasename))
-                # with open(os.path.join(self.file_storage_path,
-                #                        self.filebasename), 'wb') as file:
-                with blob.open("wb") as file:
-                    for data in response.iter_content(chunk_size=self.chunk_size):
-                        file.write(data)
+            blob = self.bucket.blob(os.path.join(self.gcs_directory, self.filebasename))
+            # with open(os.path.join(self.file_storage_path,
+            #                        self.filebasename), 'wb') as file:
+            with blob.open("wb") as file:
+                for data in response.iter_content(chunk_size=self.chunk_size):
+                    file.write(data)
+
+            return 1
 
         except:
+            return -1
             pass

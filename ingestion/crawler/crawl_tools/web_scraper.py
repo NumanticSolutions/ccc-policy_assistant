@@ -46,51 +46,61 @@ class webScraper:
         :return:
         '''
 
+        min_html_length = 100
+
         # Get HTML code from webpage
         html = await cls.collect_page_data(url=url)
 
-        ## Step 2: Load HTML Response Into BeautifulSoup
-        soup = BeautifulSoup(html, "html.parser")
+        if len(html) < min_html_length:
+            # Step 8: Create a class instance and return it
+            instance = cls(crawl_results={})
+            return instance
 
-        ## Step 3: Get the HTML code in a string
-        html_code_string = str(soup)
+        else:
 
-        ## Step 4: Get text from p tags
-        ptag_texts = []
-        for p in soup.find_all('p'):
-            ptag_texts.append(p.text)
+            ## Step 2: Load HTML Response Into BeautifulSoup
+            soup = BeautifulSoup(html, "html.parser")
 
-        ## Step 4b: Create a single clean text column
-        ptag_text = cls.clean_ptag_texts(ptag_texts=ptag_texts)
+            ## Step 3: Get the HTML code in a string
+            html_code_string = str(soup)
 
-        # ## Step 5: Get the BeautifulSoup text
-        # soup_text = soup.get_text()
-        #
-        # ## Step 6: Get the HTML2Text text
-        # h = html2text.HTML2Text()
-        # # Ignore converting links from HTML
-        # h.ignore_links = True
-        # h.body_width = 0
-        # h2t_text = h.handle(html_code_string)
+            ## Step 4: Get text from p tags
+            ptag_texts = []
+            for p in soup.find_all('p'):
+                ptag_texts.append(p.text)
 
-        ## Step 6: Return all links in <a tags with href values
-        atag_urls = []
-        for a in soup.find_all('a', href=True):
-            atag_urls.append(a['href'])
+            ## Step 4b: Create a single clean text column
+            ptag_text = cls.clean_ptag_texts(ptag_texts=ptag_texts)
 
-        # Append the base url to href URLS to make them navigable - remove redundant URLs in the process
-        atag_urls = [cls.get_full_url(purl=url, hurl=u) for u in set(atag_urls) if u.find("http") < 0]
+            # ## Step 5: Get the BeautifulSoup text
+            # soup_text = soup.get_text()
+            #
+            # ## Step 6: Get the HTML2Text text
+            # h = html2text.HTML2Text()
+            # # Ignore converting links from HTML
+            # h.ignore_links = True
+            # h.body_width = 0
+            # h2t_text = h.handle(html_code_string)
 
-        # Step 7: Save results to a dictionary
-        result = dict(url=url,
-                    html_code_string=html_code_string,
-                    soup=soup,
-                    ptag_text=ptag_text,
-                    atag_urls=atag_urls)
+            ## Step 6: Return all links in <a tags with href values
+            atag_urls = []
+            for a in soup.find_all('a', href=True):
+                atag_urls.append(a['href'])
 
-        # Step 8: Create a class instance and return it
-        instance = cls(crawl_results=result)
-        return instance
+            # Append the base url to href URLS to make them navigable - remove redundant URLs in the process
+            atag_urls = [cls.get_full_url(purl=url, hurl=u) for u in atag_urls]
+            atag_urls = set(atag_urls)
+
+            # Step 7: Save results to a dictionary
+            result = dict(url=url,
+                        html_code_string=html_code_string,
+                        soup=soup,
+                        ptag_text=ptag_text,
+                        atag_urls=atag_urls)
+
+            # Step 8: Create a class instance and return it
+            instance = cls(crawl_results=result)
+            return instance
 
     @staticmethod
     async def collect_page_data(url):
@@ -122,18 +132,24 @@ class webScraper:
         concatenate the page url (purl) with href url (hurl) to create a URL that can be crawled.
         '''
 
-        # Parse the page URL
-        parsed_url = urllib.parse.urlparse(purl)
+        # First check in this is a navigable URL
+        if hurl.find("http") >= 0:
+            return hurl
 
-        # Construct a root URL
-        root_url = "{}://{}{}".format(parsed_url.scheme, parsed_url.netloc, parsed_url.path)
+        else:
 
-        # Drop aspx references
-        drop_pat = r"\/[^\/]+\.aspx"
-        root_url = re.sub(drop_pat, "/", root_url)
+            # Parse the page URL
+            parsed_url = urllib.parse.urlparse(purl)
 
-        # Join root and href URL
-        return urllib.parse.urljoin(root_url, hurl)
+            # Construct a root URL
+            root_url = "{}://{}{}".format(parsed_url.scheme, parsed_url.netloc, parsed_url.path)
+
+            # Drop aspx references
+            drop_pat = r"\/[^\/]+\.aspx"
+            root_url = re.sub(drop_pat, "/", root_url)
+
+            # Join root and href URL
+            return urllib.parse.urljoin(root_url, hurl)
 
     @classmethod
     def clean_ptag_texts(self, ptag_texts: list):
