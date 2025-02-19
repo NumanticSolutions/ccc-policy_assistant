@@ -4,12 +4,15 @@
 
 # GCP
 # from google.cloud import secretmanager
+import os
+import io
+
 from google.cloud import storage
 import google
 import google.oauth2.credentials
 from google.auth import compute_engine
 import google.auth.transport.requests
-import os
+
 import pandas_gbq as gbq
 
 # def get_gcpsecrets(project_id,
@@ -55,6 +58,47 @@ def table_exists(project_id, dataset_id, table_id):
             return False
         else:
             raise e
+
+def gcp_list_bucket(gcp_project_id, gcs_bucket_name, path=""):
+    '''
+    Function to list all files in a GCP Cloud Storage directory
+    '''
+
+    # Create a storage client
+    storage_client = storage.Client(project=gcp_project_id)
+
+    # Get the bucket
+    bucket = storage_client.bucket(gcs_bucket_name)
+
+    # Note: Client.list_blobs requires at least package version 1.17.0.
+    blobs = storage_client.list_blobs(bucket)
+
+    # Note: The call returns a response only when the iterator is consumed.
+    blob_names = [blob.name for blob in blobs]
+
+    if path != "":
+        blob_names = [bn for bn in blob_names if bn.find(path) >= 0]
+
+    return blob_names
+
+
+def read_gcs_file(gcp_project_id, gcs_bucket_name, path, filename):
+    '''
+    Function to read a GCP Cloud Storage file
+    '''
+
+    # Create a storage client
+    storage_client = storage.Client(project=gcp_project_id)
+
+    # Get the bucket
+    bucket = storage_client.bucket(gcs_bucket_name)
+
+    # Create a path to the file
+    file_blob_path = os.path.join(path, filename)
+    blob = bucket.blob(file_blob_path)
+
+    return io.BytesIO(blob.download_as_string())
+
 
 def upload_directory_to_gcs(local_directory, gcs_project_id,
                             gcs_bucket_name, gcs_directory):
@@ -113,9 +157,6 @@ def download_directory_from_gcs(gcs_project_id, gcs_bucket_name,
             os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
             blob.download_to_filename(local_file_path)
             print(f"Downloaded {blob.name} to {local_file_path}")
-
-
-
 
 
 def idtoken_from_metadata_server(url: str, service_account_email: str):

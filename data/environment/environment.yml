@@ -12,6 +12,7 @@ dependencies:
 
   - pip:
       - pandas
+      - openpyxl
       - numpy
       - pydantic
       - jsonlines
@@ -23,14 +24,17 @@ dependencies:
       - google-cloud-storage
       - google.auth
       - google-cloud-bigquery
-      - pandas-gbq
       - vertexai
+      - google-generativeai>=0.8.2
+
+      - pandas-gbq    
 
       - streamlit
 
       - scikit-learn
       - scipy
       - nltk
+      - matplotlib
 
       - langchain
       - langchain_community
@@ -40,6 +44,10 @@ dependencies:
       - langchain-google-community
       - langchain-google-vertexai
       - langgraph
+      - langchain_experimental
+      - tabulate
+
+      - pypdf
 
       - pyppeteer
       - beautifulsoup4

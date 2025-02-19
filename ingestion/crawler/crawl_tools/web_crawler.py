@@ -61,8 +61,6 @@ class webCrawler():
         self.gcp_project_id = "eternal-bongo-435614-b9"
         self.gcs_bucket_name = "ccc-crawl_data"
         self.gcs_directory = ""
-        self.storage_client = storage.Client(project=self.gcp_project_id)
-        self.bucket = self.storage_client.bucket(self.gcs_bucket_name)
 
         # Output filename base - if this is blank, the crawler will assign a name
         self.output_filename_base = ""
@@ -82,6 +80,10 @@ class webCrawler():
 
         # Update any key word args
         self.__dict__.update(kwargs)
+
+        # Set GCS class variables
+        self.storage_client = storage.Client(project=self.gcp_project_id)
+        self.gcs_bucket = self.storage_client.bucket(self.gcs_bucket_name)
     
     async def crawl_sites(self,
                           dont_crawl_urls,
@@ -128,53 +130,70 @@ class webCrawler():
         # Use the for loop to count depth
         for depth_cnt in tqdm(range(1, depth + 1)):
     
-            # Step 2a. Set first crawl list equal to only the seed URL
+            # Step 2.1: Set first crawl list equal to only the seed URL
             if depth_cnt == 1:
                 # Add seed as first URL to crawl
                 to_crawl_urls = [self.seed_url] + crawl_urls
     
-            ## Step 2b: Get a random set of URLs to crawl (equal width)
+            ## Step 2.2: Get a random set of URLs to crawl (equal width)
             if width < len(to_crawl_urls):
                 r_urls = random.sample(to_crawl_urls, width)
             else:
                 r_urls = to_crawl_urls
     
-            ##  Step 2c: Create a new list of URLs found at this depth level
+            ##  Step 2.3: Create a new list of URLs found at this depth level
             found_urls = []
 
-            ## Step 2d: Crawl all randomly selected URLs
+            ## Step 2.4: Crawl all randomly selected URLs
             # print("Depth level: {}: {} URLs".format(depth_cnt, len(r_urls)))
             for r_url in r_urls:
 
-                ## Step 2e: Check if this URL is on the dont_craw_list
+                ## Step 2.5: Check if this URL is on the dont_craw_list
                 if r_url not in dont_crawl_urls and self.is_good_domain(r_url) == True:
 
                     if self.verbose:
                         print(r_url)
 
-                    ## Step 2e. Check if this is a file download
-                    if self.is_file_url(r_url):
+                    ## Step 2.6. Check if this is a pdf that we want to read
+                    if self.is_file_url(r_url) == ".pdf":
 
-                        # Download file to a GCP bucket
-                        fd_obj = wfd.webFileDownloader(url=r_url,
-                                      gcs_directory=os.path.join("{}/files".format(self.gcs_directory)))
+                        # Read file content
+                        fd_obj = wfd.webFileDownloader(url=r_url)
+                        rf_res = fd_obj.read_document()
 
-                        dd_res = fd_obj.download_document()
+                        ## Step 2.7: Crawl and pause
+                        if rf_res != -1:
 
-                        ## Step 2f: Crawl and pause
-                        if dd_res != -1:
+                            # Add this to the dataframe of crawl results
+                            all_sites_results.append(dict(seed_url=self.seed_url,
+                                                          page_url=r_url,
+                                                          site_name="",
+                                                          page_title=rf_res["title"],
+                                                          html_code_string="",
+                                                          ptag_text=rf_res["text_content"],
+                                                          atag_urls="",
+                                                          content_type="pdf_file",
+                                                          crawl_time=datetime.now().strftime(self.dtformat)
+                                                          ))
                             self.files_cnt += 1
 
-                    else:
+                    ## Step 2.8: Check if this is a zip or csv file that we want to download
+                    elif self.is_file_url(r_url) in [".zip", ".csv"]:
 
-                        ## Step 2f: Crawl and pause
+                        # Download file content
+                        fd_obj = wfd.webFileDownloader(url=r_url,
+                                                       gcs_directory=os.path.join("{}/zipcsv_files".format(self.gcs_directory)))
+                        dd_res = fd_obj.download_document()
+
+                    ## Step 2.9: Crawl and pause
+                    else:
                         self.crawl_cnt += 1
                         # print("Crawl No: {}; URl {}".format(crawl_cnt, r_url))
                         crawl = await ws.webScraper.visit_page(url=r_url)
                         # Pause
                         time.sleep(self.wait_time)
 
-                        ## Step 2g: Add these crawl results to the list of dictionaries; if data return
+                        ## Step 2.10: Add these crawl results to the list of dictionaries; if data return
                         if len(crawl.crawl_results) > 0:
 
                             # Add to count of found crawl results
@@ -182,24 +201,27 @@ class webCrawler():
 
                             ## Add these crawl results
                             all_sites_results.append(dict(seed_url=self.seed_url,
-                                                          url=r_url,
+                                                          page_url=r_url,
+                                                          site_name=crawl.crawl_results["site_name"],
+                                                          page_title=crawl.crawl_results["page_title"],
                                                           html_code_string=crawl.crawl_results["html_code_string"],
                                                           ptag_text=crawl.crawl_results["ptag_text"],
                                                           atag_urls=crawl.crawl_results["atag_urls"],
+                                                          content_type="web_page",
                                                           crawl_time=datetime.now().strftime(self.dtformat)
                                                           ))
 
-                            ## Step 2h: Add found URLs to the found URLs list
+                            ## Step 2.11: Add found URLs to the found URLs list
                             found_urls.extend(crawl.crawl_results["atag_urls"])
 
-                    ## Step 2i: Check if results should be saved
+                    ## Step 2.12: Check if results should be saved
                     if self.crawl_results_cnt % self.save_threshold == 0:
                         self.save_results_batch(all_sites_results=all_sites_results)
 
                         # reset results to an empty list
                         all_sites_results = []
 
-                    ## Step 2j: Check if this job is hitting a crawl maximum and should stop
+                    ## Step 2.13: Check if this job is hitting a crawl maximum and should stop
                     if self.crawl_cnt >= self.max_crawls:
                         break
 
@@ -207,17 +229,17 @@ class webCrawler():
 
                     dont_crawl_urls.append(r_url)
     
-            ## Step 2j: Eliminate dups in found_urls
+            ## Step 2.14: Eliminate dups in found_urls
             found_urls = list(set(found_urls))
     
-            ## Step 2k: Add crawled URL to the dont-crawl list; two versions with and without final slash
+            ## Step 2.15: Add crawled URL to the dont-crawl list; two versions with and without final slash
             dont_crawl_urls.extend(r_urls)
             dont_crawl_urls.extend(["{}/".format(u) for u in r_urls])
     
-            ## Step 2l: Remove dont-crawl URLs from to_crawl list
+            ## Step 2.16: Remove dont-crawl URLs from to_crawl list
             to_crawl_urls = [u for u in found_urls if u not in dont_crawl_urls]
     
-            ## Step 2m: Update User
+            ## Step 2.17: Update User
             msg = ("Depth level finished: {}: {} URLs crawled; {} files downloaded; "
                    "{} URLs in to_crawl_urls; {} URLs in dont_crawl_urls").format(depth_cnt,
                                                                                   self.crawl_cnt,
@@ -226,7 +248,7 @@ class webCrawler():
                                                                                   len(dont_crawl_urls))
             print(msg)
     
-        ### Step 2n:. Save results not already yet saved
+        ### Step 2.18:. Save results not already yet saved
         self.save_results_batch(all_sites_results=all_sites_results)
 
     def save_results_batch(self, all_sites_results):
@@ -262,7 +284,7 @@ class webCrawler():
             df = pd.DataFrame(data=all_sites_results)
 
             # Save data in a CSV file
-            blob = self.bucket.blob(os.path.join("{}/crawls".format(self.gcs_directory),res_filename))
+            blob = self.gcs_bucket.blob(os.path.join("{}/webpages_pdfs".format(self.gcs_directory), res_filename))
             blob.upload_from_string(df.to_csv(), 'text/csv')
             # df.to_csv(path_or_buf=os.path.join(self.results_path, res_filename))
 
@@ -273,20 +295,21 @@ class webCrawler():
 
     def is_file_url(self, url):
         '''
-        Method to determine if the URL points to a file to be downloaded
+        Method to determine if the URL points to a file to be downloaded; If a valid
+        file extension can be found, return the value of the file extension. Otherwise,
+        return None.
         '''
 
 
         # Get the file basename
         filebasename = os.path.basename(urlparse(url).path)
 
-        is_file_url_result = False
-
         for file_ext in self.file_extentions:
             if filebasename.find(file_ext) >= 0:
-                is_file_url_result = True
+                return file_ext
 
-        return is_file_url_result
+        return None
+
 
     def is_good_domain(self, url):
         '''

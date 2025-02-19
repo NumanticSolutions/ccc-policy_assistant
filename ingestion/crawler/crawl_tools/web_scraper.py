@@ -64,6 +64,15 @@ class webScraper:
             ## Step 3: Get the HTML code in a string
             html_code_string = str(soup)
 
+            ## Step 3b: Get meta data
+            page_title = ""
+            site_name = ""
+            for tag in soup.find_all("meta"):
+                if tag.get("property", "") == "og:title":
+                    page_title = tag.get("content", "")
+                elif tag.get("property", "") == "og:site_name":
+                    site_name = tag.get("content", "")
+
             ## Step 4: Get text from p tags
             ptag_texts = []
             for p in soup.find_all('p'):
@@ -72,9 +81,9 @@ class webScraper:
             ## Step 4b: Create a single clean text column
             ptag_text = cls.clean_ptag_texts(ptag_texts=ptag_texts)
 
-            # ## Step 5: Get the BeautifulSoup text
-            # soup_text = soup.get_text()
-            #
+            ## Step 5: Get the BeautifulSoup text
+            # page_text = cls.clean_ptag_texts(ptag_texts=[soup.get_text()])
+
             # ## Step 6: Get the HTML2Text text
             # h = html2text.HTML2Text()
             # # Ignore converting links from HTML
@@ -93,10 +102,12 @@ class webScraper:
 
             # Step 7: Save results to a dictionary
             result = dict(url=url,
-                        html_code_string=html_code_string,
-                        soup=soup,
-                        ptag_text=ptag_text,
-                        atag_urls=atag_urls)
+                          site_name=site_name,
+                          page_title=page_title,
+                          html_code_string=html_code_string,
+                          soup=soup,
+                          ptag_text=ptag_text,
+                          atag_urls=atag_urls)
 
             # Step 8: Create a class instance and return it
             instance = cls(crawl_results=result)
@@ -160,6 +171,8 @@ class webScraper:
 
         # remove unwanted characters
         pat = r"\n|\xa0"
+        # pat = r"\n"
+
         ptag_text = " ".join(ptag_texts)
         ptag_text = re.sub(pat, " ", ptag_text)
         pat = "\\s+"

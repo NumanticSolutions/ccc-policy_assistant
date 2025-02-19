@@ -6,11 +6,15 @@
 # Built using Pyppeteer
 
 import os
+from io import BytesIO
+
 from urllib.parse import urlparse
 import re
 import requests
 import tqdm
 from google.cloud import storage
+
+from pypdf import PdfReader
 
 import warnings
 
@@ -62,6 +66,8 @@ class webFileDownloader:
         # Update any key word args
         self.__dict__.update(kwargs)
 
+        # Get the file basename
+        self.filebasename = os.path.basename(urlparse(self.url).path)
 
     def validate_filename(self):
         '''
@@ -72,9 +78,6 @@ class webFileDownloader:
             boolean
 
         '''
-
-        # Get the file basename
-        self.filebasename = os.path.basename(urlparse(self.url).path)
 
         acceptable_file = False
 
@@ -112,4 +115,57 @@ class webFileDownloader:
 
         except:
             return -1
+
+    def read_document(self):
+        '''
+        Method to read the file from a URL and return the text.
+        '''
+
+        if self.filebasename.find(".csv") >= 0:
+            # Todo - complete later
             pass
+
+        elif self.filebasename.find(".zip") >= 0:
+            # Todo - complete later
+            pass
+
+        elif self.filebasename.find(".pdf") >= 0:
+
+            try:
+                response = requests.get(self.url, stream=True, verify=False)
+                # response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+
+                pdf_file = BytesIO(response.content)
+                reader = PdfReader(pdf_file)
+
+                title = reader.metadata.get("/Title", "")
+                purl = urlparse(self.url)
+                site_base_url = "{}://{}".format(purl.scheme, purl.netloc)
+
+                text_content = ""
+                for page in reader.pages:
+                    text_content += page.extract_text() + "\n"
+
+                return dict(base_url=site_base_url,
+                            file_url=self.url,
+                            title=title,
+                            text_content=self.clean_text(text_content))
+
+            except:
+                return -1
+
+    def clean_text(self, text):
+        '''
+        Method to clean the ptag text. This method takes a list of ptag texts and
+        returns a single string of cleaned ptag texts joined together.
+        '''
+
+        # remove unwanted characters
+        pat = r"\n|\xa0"
+        # pat = r"\n"
+
+        text = re.sub(pat, " ", text)
+        pat = "\\s+"
+        text = re.sub(pat, " ", text)
+
+        return text
