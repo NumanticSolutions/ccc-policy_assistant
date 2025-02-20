@@ -35,7 +35,7 @@ from google.cloud import storage
 # import chunk_text_3 as ct
 # import url_exclusion_list as uel
 
-sys.path.insert(0, "../../interface/utils")
+sys.path.insert(0, "../../../interface/utils")
 import gcp_tools as gct
 # import authentication as auth
 
