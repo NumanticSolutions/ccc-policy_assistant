@@ -52,7 +52,7 @@ class CCCPolicyAssistant:
         self.gcs_embeddings_bucket_name = "ccc-chromadb-vai"
         self.gcs_embeddings_directory = ""
 
-        self.embedding_model = "text-embedding-004"
+        self.embedding_model = "text-embedder-004"
         self.embedding_num_batch = 5
         self.embeddings_local_path = "data/local_chromadb/"
         # self.embeddings_local_path = ("/Users/stephengodfrey/OneDrive - numanticsolutions.com"

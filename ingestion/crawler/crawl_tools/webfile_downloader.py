@@ -102,7 +102,7 @@ class webFileDownloader:
 
             # Get file size
             self.total_file_size = int(response.headers.get('content-length', 0))
-
+            self.content_type = response.headers.get('content-type', 0)
 
             blob = self.bucket.blob(os.path.join(self.gcs_directory, self.filebasename))
             # with open(os.path.join(self.file_storage_path,

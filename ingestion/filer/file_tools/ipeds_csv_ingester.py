@@ -98,7 +98,6 @@ class IpedsCsvIngester:
         Method to read and uncompress the Zip files into Pandas DataFrames
         '''
 
-
         ## Step 1: Get a list of files to read - list of tuples
         file_pairs = self.get_files_to_read(data_path=self.input_data_path)
 

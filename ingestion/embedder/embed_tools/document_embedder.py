@@ -31,11 +31,11 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from google.cloud import storage
 
-# sys.path.insert(0, "../../embedding")
+# sys.path.insert(0, "../../embedder")
 # import chunk_text_3 as ct
 # import url_exclusion_list as uel
 
-sys.path.insert(0, "../../../interface/utils")
+sys.path.append("../../interface/utils")
 import gcp_tools as gct
 # import authentication as auth
 
@@ -49,7 +49,7 @@ class EmbedDocuments:
 
     The 'embed()' method will use a specified model to vector embed chunks and
     corresponding metadatas. The 'meta_key' can be used to specify the key name
-    and 'is_verbose' can toggle printing information during embedding. This method
+    and 'is_verbose' can toggle printing information during embedder. This method
     does not return anything.
 
     ():
@@ -61,7 +61,7 @@ class EmbedDocuments:
         metas [strs]      : The metadata for each of the chunks to be embedded
         model (str)       : Embedding model to use, such as 'mxbai-embed-large'
         meta_key (str)    : Key to use for the metadats, such as 'url'
-        is_verbose (bool) : Print updates during embedding
+        is_verbose (bool) : Print updates during embedder
 
     """
 
@@ -83,19 +83,23 @@ class EmbedDocuments:
         self.embedding_num_batch = 5
 
         # Assign class values based on inputs
-
         self.chroma_collection_name = "crawl_docs1"
         self.gcs_input_bucket_name = "ccc-crawl_data"
         self.gcs_embed_bucket_name = "ccc-chromadb-vai"
         self.embeddings_path = ("/Users/stephengodfrey/OneDrive - numanticsolutions.com"
                                 "/Engagements/Projects/ccc_policy_assistant/data/crawls/")
 
+        # Sources to embed
+        self.sources_to_embed = ["aacc", "cccaoe", "cccco", "ccleague", "columbia",
+                                 "ecs", "lao", "nsc", "wikipedia",
+                                 "ipeds/zipcsv_files/prep/descriptions_2025Feb19.csv"]
+
         # Text column
-        self.url_col = "url"
+        self.url_col = "page_url"
         self.text_col = "ptag_text"
         self.input_source_col = "input_type"
-        self.input_df_cols = ["url", "ptag_text", self.input_source_col]
-        self.metadata_cols = ["url", self.input_source_col]
+        self.input_df_cols = ["page_url", "ptag_text", self.input_source_col]
+        self.metadata_cols = ["page_url", self.input_source_col]
         self.chunk_size = 250
         self.chunk_overlap = 10
         self.minimum_text_length = 10
@@ -145,7 +149,7 @@ class EmbedDocuments:
 
     def get_input_filenames(self):
         '''
-        Method to collect the filenames in the input_webcrawl_data_path - allowing for embedding multiple
+        Method to collect the filenames in the input_webcrawl_data_path - allowing for embedder multiple
         documents in a single run.
         :return:
         '''
@@ -161,10 +165,11 @@ class EmbedDocuments:
         for blob in self.input_bucket.list_blobs():
             bpath = pathlib.Path(blob.name)
             bps = bpath.parts
-            input_files_rows.append(dict(source=bps[0],
-                                         input_type=bps[1],
-                                         filename=bps[2],
-                                         path=blob.name))
+            if bps[0] in self.sources_to_embed or blob.name in self.sources_to_embed:
+                input_files_rows.append(dict(source=bps[0],
+                                             input_type=bps[1],
+                                             filename=bps[2],
+                                             path=blob.name))
 
         self.input_files = pd.DataFrame(data=input_files_rows)
 
@@ -189,14 +194,14 @@ class EmbedDocuments:
 
         ##### Step 1 - read webcrawl files
         # For each source, read all the text files
-        ################################################
+        # Source = webpages_pdfs
         input_sources = self.input_files["source"].unique().tolist()
 
         for input_source in input_sources:
 
             # Create a mask for this source
             mask = (self.input_files["source"] == input_source) & \
-                   (self.input_files["input_type"] == "crawls")
+                   (self.input_files["input_type"] == "webpages_pdfs")
 
             if len(self.input_files[mask]) > 0:
                 idx0 = self.input_files[mask].index[0]

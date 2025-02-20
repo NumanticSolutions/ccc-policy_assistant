@@ -77,6 +77,7 @@ class webCrawler():
 
         # Show URLs that are being crawled
         self.verbose = False
+        # self.verbose = True
 
         # Update any key word args
         self.__dict__.update(kwargs)
@@ -134,6 +135,9 @@ class webCrawler():
             if depth_cnt == 1:
                 # Add seed as first URL to crawl
                 to_crawl_urls = [self.seed_url] + crawl_urls
+
+                if self.verbose:
+                    print("depth: {}: 1; :Len to_crawl_urls: {}".format(depth_cnt, len(to_crawl_urls)))
     
             ## Step 2.2: Get a random set of URLs to crawl (equal width)
             if width < len(to_crawl_urls):
@@ -184,6 +188,24 @@ class webCrawler():
                         fd_obj = wfd.webFileDownloader(url=r_url,
                                                        gcs_directory=os.path.join("{}/zipcsv_files".format(self.gcs_directory)))
                         dd_res = fd_obj.download_document()
+
+                        # Add this to the dataframe of crawl results
+                        if dd_res != -1:
+                            resheadmsg = ("response_header_content_type: {}; size: {}")
+
+                            all_sites_results.append(dict(seed_url=self.seed_url,
+                                                          page_url=r_url,
+                                                          site_name="",
+                                                          page_title=os.path.basename(r_url),
+                                                          html_code_string=resheadmsg.format(fd_obj.content_type,
+                                                                                             fd_obj.total_file_size),
+                                                          ptag_text="**file download**",
+                                                          atag_urls="",
+                                                          content_type="zip_file",
+                                                          crawl_time=datetime.now().strftime(self.dtformat)
+                                                          )
+                                                     )
+                            self.files_cnt += 1
 
                     ## Step 2.9: Crawl and pause
                     else:
