@@ -49,7 +49,7 @@ Although this tool is underdevelopment and its technological components are like
 - RAG Framework: [LangChain](https://www.langchain.com)
 - Vector Database: [Chroma](https://www.trychroma.com/)
 - Embedding Model: [Text-embedding-004](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/text-embeddings-api)
-- AI Large language Model (LLM): [Gemini-1.5-pro](https://ai.google.dev/gemini-api/docs/models/gemini))
+- AI Large language Model (LLM): [Gemini-1.5-pro](https://ai.google.dev/gemini-api/docs/models/gemini)
 - Document & Vector Storage: [Google Cloud Storage](https://cloud.google.com/?hl=en)
 - User Interface: [Google Cloud Run](https://cloud.google.com/?hl=en)
 
