@@ -10,15 +10,15 @@ import pandas as pd
 
 # from uuid import uuid4
 
-import langchain
-from jupyterlab.handlers.build_handler import build_path
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.document_loaders import TextLoader
+# import langchain
+# from jupyterlab.handlers.build_handler import build_path
+# from langchain.chains import create_retrieval_chain
+# from langchain.chains.combine_documents import create_stuff_documents_chain
+# from langchain.document_loaders import TextLoader
 from langchain_google_community import GCSFileLoader
 
 from langchain.document_loaders import PyPDFLoader
-from langchain.prompts import PromptTemplate
+# from langchain.prompts import PromptTemplate
 # from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores.chroma import Chroma
 from langchain_google_vertexai import VertexAI, VertexAIEmbeddings
@@ -26,7 +26,7 @@ import vertexai
 
 import chromadb
 
-from langchain_community.document_loaders import DataFrameLoader
+# from langchain_community.document_loaders import DataFrameLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from google.cloud import storage
@@ -91,16 +91,27 @@ class EmbedDocuments:
 
         # Sources to embed
         self.sources_to_embed = ["aacc", "cccaoe", "cccco", "ccleague", "columbia",
-                                 "ecs", "lao", "nsc", "wikipedia",
-                                 "ipeds/zipcsv_files/prep/descriptions_2025Feb19.csv"]
+                                 "ecs", "lao", "nsc", "wikipedia", "ipeds"]
+
+        # self.sources_to_embed = ["ipeds"]
+
+        # Sources that have csv files for the csv agent
+        self.csv_files_sources = ["ipeds"]
+
+        # File column mapping - mapping from the files description file to the webcrawl text
+        # There should be a map value for each input column
+        self.csv_desc_col_map = {"seed_url": "seed_url",
+                                 "page_url": "page_url",
+                                 "ptag_text": "description",
+                                 "input_type": "file_name"}
 
         # Text column
         self.url_col = "page_url"
         self.text_col = "ptag_text"
         self.input_source_col = "input_type"
-        self.input_df_cols = ["page_url", "ptag_text", self.input_source_col]
-        self.metadata_cols = ["page_url", self.input_source_col]
-        self.chunk_size = 250
+        self.input_df_cols = ["seed_url", "page_url", "ptag_text", self.input_source_col]
+        self.metadata_cols = ["seed_url", "page_url", self.input_source_col]
+        self.chunk_size = 500
         self.chunk_overlap = 10
         self.minimum_text_length = 10
 
@@ -165,7 +176,9 @@ class EmbedDocuments:
         for blob in self.input_bucket.list_blobs():
             bpath = pathlib.Path(blob.name)
             bps = bpath.parts
-            if bps[0] in self.sources_to_embed or blob.name in self.sources_to_embed:
+            if bps[0] in self.sources_to_embed and blob.name.endswith(".csv") == True and \
+                os.path.split(blob.name)[1][:5] != "prep_":
+
                 input_files_rows.append(dict(source=bps[0],
                                              input_type=bps[1],
                                              filename=bps[2],
@@ -194,28 +207,41 @@ class EmbedDocuments:
 
         ##### Step 1 - read webcrawl files
         # For each source, read all the text files
-        # Source = webpages_pdfs
         input_sources = self.input_files["source"].unique().tolist()
 
         for input_source in input_sources:
 
             # Create a mask for this source
-            mask = (self.input_files["source"] == input_source) & \
-                   (self.input_files["input_type"] == "webpages_pdfs")
+            mask = (self.input_files["source"] == input_source)
 
             if len(self.input_files[mask]) > 0:
+
+                # List to hold dataframes with text content to be embedded
+                dfs = []
+
+                # Get the first entry
                 idx0 = self.input_files[mask].index[0]
 
-                dfs = []
-                for idx in self.input_files[mask].index:
 
-                    # Walk through GCS directory to geta list of input files
-                    blob = self.input_bucket.blob(self.input_files.loc[idx, "path"])
-                    data = blob.download_as_bytes()
-                    dft = pd.read_csv(io.BytesIO(data))
+                # If this is a file input source, special handling is required
+                if input_source in self.csv_files_sources:
 
-                    # Add to list of datafranes
-                    dfs.append(dft)
+                    # Get the file descriptions into the input text column
+                    dfs.append(self.concat_filesource_data(file_source=input_source))
+                    self.df_fc = self.concat_filesource_data(file_source=input_source)
+
+                # Otherwise load data from all files from this source
+                else:
+
+                    for idx in self.input_files[mask].index:
+
+                        # Walk through GCS directory to geta list of input files
+                        blob = self.input_bucket.blob(self.input_files.loc[idx, "path"])
+                        data = blob.download_as_bytes()
+                        dft = pd.read_csv(io.BytesIO(data))
+
+                        # Add to list of datafranes
+                        dfs.append(dft)
 
                 # Create a single dataframe for this input source
                 if len(dfs) > 0:
@@ -232,7 +258,8 @@ class EmbedDocuments:
                     src_df = src_df.reset_index(drop=True)
 
                     # Add a column for source
-                    src_df[self.input_source_col] = self.input_files.loc[idx0, self.input_source_col]
+                    if self.input_source_col not in src_df.columns:
+                        src_df[self.input_source_col] = self.input_files.loc[idx0, self.input_source_col]
 
                     # Reduce columns
                     src_df = src_df[self.input_df_cols]
@@ -385,6 +412,7 @@ class EmbedDocuments:
         for id, doc in zip(range(len(self.docs)), self.docs):
             doc.metadata["id"] = id + 1
 
+
     def copy_embeddings_to_gcs(self):
         '''
         Method to copy embeddings from a local store to GCS.
@@ -395,4 +423,60 @@ class EmbedDocuments:
                                     gcs_project_id=self.gcs_project_id,
                                     gcs_input_bucket_name=self.gcs_input_bucket_name,
                                     gcs_directory=self.gcs_folder)
+
+
+    def concat_filesource_data(self, file_source):
+        '''
+        Function to prepare CSV files descriptions by concatenating the crawl history and
+        descriptions data into a single dataframe.
+
+        '''
+
+        # Create a mask for these dataframes
+        mask = (self.input_files["source"] == file_source)
+
+        if len(self.input_files[mask]) == 2:
+
+            dfs = []
+            for idx in self.input_files[mask].index:
+                # Walk through GCS directory to geta list of input files
+                blob = self.input_bucket.blob(self.input_files.loc[idx, "path"])
+                data = blob.download_as_bytes()
+                dfs.append(pd.read_csv(io.BytesIO(data)))
+
+
+            for df in dfs:
+
+                # Find the dataframe that doesn't have the self.text_col (ptag_text) column
+                # since we're going to add it
+                if self.text_col not in df.columns:
+                    dft1 = df
+                else:
+                    dft2 = df
+
+            # Add these columns to dft1 (the one without self.text_col column
+            for col in self.input_df_cols:
+                dft1[col] = ""
+
+            for idx in dft1.index:
+
+                # Get the base file name and look for it in the descriptions
+                filenamebase = os.path.splitext(dft1.loc[idx, "file_name"])[0]
+                mask = dft2["page_title"].str.lower().str.find("{}.".format(filenamebase)) == 0
+
+                # Get these values from the other dataframe
+                if len(dft2[mask]) == 1:
+                    idx20 = dft2[mask].index[0]
+
+                    for col_key in self.csv_desc_col_map.keys():
+                        # Try to find the column in dft2; if not look in dft1
+                        try:
+                            dft1.loc[idx, col_key] = dft2.loc[idx20, self.csv_desc_col_map[col_key]]
+                        except:
+                            dft1.loc[idx, col_key] = dft1.loc[idx, self.csv_desc_col_map[col_key]]
+
+            return dft1[self.input_df_cols]
+
+        else:
+            return None
 
