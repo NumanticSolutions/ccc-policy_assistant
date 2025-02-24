@@ -170,15 +170,11 @@ class CCCPolicyAssistant:
         self.extended_retrieved_docs = []
         for i, doc in enumerate(self.retrieved_docs):
 
-            # Get document before  only if id > 0
-            if doc.metadata["id"] > 0:
-                self.extended_retrieved_docs.append(self.vector_store.get(where={"id": {"$eq": doc.metadata["id"] - 1}}))
+            # Get dall documents from this source
+            self.extended_retrieved_docs.append(self.vector_store.get(where={"page_url": {"$eq": doc.metadata["page_url"]}}))
 
             # Add the retrieved doc
             self.extended_retrieved_docs.append(doc)
-
-            # Get the document after
-            self.extended_retrieved_docs.append(self.vector_store.get(where={"id": {"$eq": doc.metadata["id"] + 1}}))
 
         self.extended_retrieved_docs = self.retrieved_docs
 
