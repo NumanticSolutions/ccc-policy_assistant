@@ -19,7 +19,9 @@ import vertexai
 from langchain.tools.base import StructuredTool
 from langgraph.checkpoint.memory import MemorySaver
 
+########## Change for rag testing
 sys.path.insert(0, "utils")
+sys.path.insert(0, "../../interface/utils")
 from gcp_tools import download_directory_from_gcs
 from authentication import ApiAuthentication
 
@@ -38,7 +40,7 @@ class CCCPolicyAssistant:
     file name for any saved transcripts, and the path & collection
     name for the vector database. """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.version = "25.01.30"
 
         self.transcript_name_base = "cccbot_transcript"
@@ -49,10 +51,10 @@ class CCCPolicyAssistant:
 
         self.gcp_project_id = "eternal-bongo-435614-b9"
         self.gcp_location = "us-central1"
-        self.gcs_embeddings_bucket_name = "ccc-chromadb-vai"
+        self.gcs_embeddings_bucket_name = "ccc-chromadb-vai-2"
         self.gcs_embeddings_directory = ""
 
-        self.embedding_model = "text-embedder-004"
+        self.embedding_model = "text-embedding-004"
         self.embedding_num_batch = 5
         self.embeddings_local_path = "data/local_chromadb/"
         # self.embeddings_local_path = ("/Users/stephengodfrey/OneDrive - numanticsolutions.com"
@@ -100,14 +102,17 @@ class CCCPolicyAssistant:
 
         self.doc_search_retrieval_k = 4
 
+        # Update any keyword args
+        self.__dict__.update(kwargs)
+
         creds = ApiAuthentication()
 
         # LangSmith
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
-        # os.environ["LANGCHAIN_API_KEY"] = creds.apis_configs["LANGCHAIN_API_KEY"] # 2501
+        os.environ["LANGCHAIN_API_KEY"] = creds.apis_configs["LANGCHAIN_API_KEY"]
 
         # Google
-        # os.environ["GOOGLE_API_KEY"] = creds.apis_configs["GOOGLE_API_KEY"]
+        os.environ["GOOGLE_API_KEY"] = creds.apis_configs["GOOGLE_API_KEY"]
 
         ### Step 2: Initialize Vertex AI
         vertexai.init(project=self.gcp_project_id,
@@ -276,7 +281,8 @@ class CCCPolicyAssistant:
                 self.ai_response = step["messages"][-1].content
 
             try:
-                self.source_urls = list(set([doc.metadata["url"] for doc in self.retrieved_docs]))
+                self.source_urls = list(set([(doc.metadata["seed_url"], doc.metadata["page_url"]) \
+                                             for doc in self.retrieved_docs]))
 
             except:
                 self.source_urls = []

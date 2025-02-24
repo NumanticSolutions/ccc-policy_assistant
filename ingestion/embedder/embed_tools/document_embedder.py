@@ -83,11 +83,11 @@ class EmbedDocuments:
         self.embedding_num_batch = 5
 
         # Assign class values based on inputs
-        self.chroma_collection_name = "crawl_docs1"
+        self.chroma_collection_name = "crawl_docs-vai-2"
         self.gcs_input_bucket_name = "ccc-crawl_data"
-        self.gcs_embed_bucket_name = "ccc-chromadb-vai"
+        self.gcs_embed_bucket_name = "ccc-chromadb-vai-2"
         self.embeddings_path = ("/Users/stephengodfrey/OneDrive - numanticsolutions.com"
-                                "/Engagements/Projects/ccc_policy_assistant/data/crawls/")
+                                "/Engagements/Projects/ccc_policy_assistant/data/ccc-chromadb-vai-2/")
 
         # Sources to embed
         self.sources_to_embed = ["aacc", "cccaoe", "cccco", "ccleague", "columbia",
@@ -109,8 +109,9 @@ class EmbedDocuments:
         self.url_col = "page_url"
         self.text_col = "ptag_text"
         self.input_source_col = "input_type"
-        self.input_df_cols = ["seed_url", "page_url", "ptag_text", self.input_source_col]
-        self.metadata_cols = ["seed_url", "page_url", self.input_source_col]
+        self.text_col_len = "{}_len".format(self.text_col)
+        self.input_df_cols = ["seed_url", "page_url", "ptag_text", self.input_source_col, self.text_col_len]
+        self.metadata_cols = ["seed_url", "page_url", self.input_source_col, self.text_col_len]
         self.chunk_size = 500
         self.chunk_overlap = 10
         self.minimum_text_length = 10
@@ -144,6 +145,8 @@ class EmbedDocuments:
 
         # Set up Chroma
         self.client = chromadb.PersistentClient(path=self.embeddings_path)
+
+        # self.client.delete_collection(name=self.chroma_collection_name)
 
         # Create a new collection
         self.collection = self.client.get_or_create_collection(name=self.chroma_collection_name)
@@ -191,19 +194,6 @@ class EmbedDocuments:
         Method to read raw text csv files data into a dataframe.
         :return:
         '''
-
-        # # Create a storage client
-        # storage_client = storage.Client(project=gcp_project_id)
-        #
-        # # Get the bucket
-        # bucket = storage_client.bucket(gcs_input_bucket_name)
-        #
-        # # Get the blob
-        # blob = bucket.blob(os.path.join(crawl_data_path, crawl_file))
-        #
-        # # Works
-        # data = blob.download_as_bytes()
-        # dft = pd.read_csv(io.BytesIO(data))
 
         ##### Step 1 - read webcrawl files
         # For each source, read all the text files
@@ -261,6 +251,10 @@ class EmbedDocuments:
                     if self.input_source_col not in src_df.columns:
                         src_df[self.input_source_col] = self.input_files.loc[idx0, self.input_source_col]
 
+                    # Add a column for text length
+                    src_df[self.text_col_len] = src_df[self.text_col].str.len()
+                    src_df[self.text_col_len] = src_df[self.text_col_len].astype(str)
+
                     # Reduce columns
                     src_df = src_df[self.input_df_cols]
 
@@ -270,126 +264,13 @@ class EmbedDocuments:
                         texts = self.text_splitter.create_documents([src_df.loc[idx, self.text_col]])
 
                         # Add metadata
-                        for text in texts:
+                        for i, text in enumerate(texts):
                             text.metadata = {col: src_df.loc[idx, col] for col in self.metadata_cols}
                             text.metadata["source"] = self.input_files.loc[idx0, "source"]
+                            text.metadata["source_idx"] = str(idx)
+                            text.metadata["source_idx_i"] = str(i)
 
                         self.docs.extend(texts)
-
-
-        # #### Step 2: Read tables to text
-        # tc_rows = []
-        # for filename in self.tablestotext_input_files:
-        #
-        #     # Open the file
-        #     with open(os.path.join(self.input_tabletotext_data_path, filename), "r") as file:
-        #         data = file.read()
-        #
-        #     # Split this into a list of text chunks
-        #     texts_chunks = data.split("\n\n")
-        #
-        #     # Add to a list of dictionaries
-        #     input_source = "tables_to_text"
-        #     url = "hifld_oes_wiki_ccccc"
-        #     tc_rows = []
-        #     for tc in texts_chunks:
-        #
-        #         # Split again into sentences
-        #         tc_sentences = tc.split(". ")
-        #         for tc_sentence in tc_sentences:
-        #             entry_dict = {}
-        #
-        #             entry_dict[self.url_col] = url
-        #             entry_dict[self.text_col] = tc_sentence
-        #             # entry_dict[self.text_col] = tc
-        #
-        #             entry_dict[self.input_source_col] = input_source
-        #
-        #             tc_rows.append(entry_dict)
-        #
-        # df_tc = pd.DataFrame(data=tc_rows)
-        #
-        # # Combine the dataframes
-        # self.input_df = pd.concat(objs=[self.input_df, df_tc], ignore_index=True)
-        #
-        # # Drop any rows with less than minimum characters
-        # mask = self.input_df["ptag_text"].str.len() > self.minimum_text_length
-        # self.input_df = self.input_df[mask]
-        #
-        # # Reset index
-        # self.input_df = self.input_df.reset_index(drop=True)
-
-        #####
-        # We might want to reduce some redundant text by checking similarity of input texts
-        # Need to figure out how to handle additional documents - do we add to the same collection?
-
-    def read_pdf_data(self):
-        '''
-        Method to read PDF data found in the GCS input buckets
-        '''
-
-        def load_pdf(file_path):
-            return PyPDFLoader(file_path)
-
-        input_sources = self.input_files["source"].unique().tolist()
-
-        for input_source in input_sources:
-
-            # Create a mask for this source
-            mask = (self.input_files["source"] == input_source) & \
-                   (self.input_files["input_type"] == "files")
-
-            if len(self.input_files[mask]) > 0:
-                idx0 = self.input_files[mask].index[0]
-
-                pdf_docs = []
-                for idx in self.input_files[mask].index:
-
-                    if self.input_files.loc[idx,"path"].endswith('.pdf'):
-
-                        try:
-                            loader = GCSFileLoader(project_name=self.gcs_project_name,
-                                                   bucket=self.input_bucket,
-                                                   blob=self.input_files.loc[idx, "path"],
-                                                   loader_func=load_pdf
-                            )
-
-                            pdf_docs.extend(loader.load())
-
-                        except:
-                            pass
-
-                # Chunk PDF
-                self.pdf_docs = pdf_docs
-                # texts = self.text_splitter.create_documents(pdf_docs)
-                #
-                # # Add metadata
-                # for text in texts:
-                #     text.metadata = {"source": self.input_files.loc[idx0, "source"] }
-                #
-                # self.docs.extend(texts)
-
-    # def chunk_input_text(self, df):
-    #     '''
-    #     Method to chunk the input text data into chunks.
-    #
-    #     :return:
-    #     '''
-    #
-    #     # chunker = ct.ChunkText()
-    #     # self.chunks = chunker.chunk_dataframe(df=self.input_df)
-    #
-    #     # Chunk texts
-    #     for idx in df.index:
-    #
-    #         texts = self.text_splitter.create_documents([df.loc[idx, self.text_col]])
-    #
-    #         # Add metadata
-    #         for text in texts:
-    #             text.metadata = {col: df.loc[idx, col] for col in self.metadata_cols}
-    #
-    #         self.docs.extend(texts)
-
 
 
     def embed(self, meta_key="url",is_verbose=False):
@@ -398,19 +279,12 @@ class EmbedDocuments:
 
         '''
 
-        # Check if collection name exists -
-        #### Need to add more functionality on how to handle this case
-        for c in self.client.list_collections():
-            if c.name == self.collection_name:
-                print("collection {} already exists; It will be overwritten".format(c.name))
-                self.client.delete_collection(name=c.name)
-
         # Add documents to the vector sore
         self.vector_store.add_documents(documents=self.docs)
 
         # Add IDs to all documents
-        for id, doc in zip(range(len(self.docs)), self.docs):
-            doc.metadata["id"] = id + 1
+        # for id, doc in zip(range(len(self.docs)), self.docs):
+        #     doc.metadata["id"] = id + 1
 
 
     def copy_embeddings_to_gcs(self):
@@ -421,7 +295,7 @@ class EmbedDocuments:
 
         gct.upload_directory_to_gcs(local_directory=self.embeddings_path,
                                     gcs_project_id=self.gcs_project_id,
-                                    gcs_input_bucket_name=self.gcs_input_bucket_name,
+                                    gcs_bucket_name=self.gcs_embed_bucket_name,
                                     gcs_directory=self.gcs_folder)
 
 
