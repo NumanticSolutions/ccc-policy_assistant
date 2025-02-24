@@ -156,10 +156,14 @@ class IpedsCsvIngester:
                                                dict1[dict1_fn][vl_key]["varTitle"])}
             dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"].rename(columns=column_map)
 
-            ## Step 2.8: Create a filter data for only CA CC
+            ## Step 2.8: Remove columns that were not in the map and for which we don't have long names
+            ln_cols = [c for c in column_map.values() if c in dict0[dict0_fn]["data"].columns]
+            dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"][ln_cols]
+
+            ## Step 2.9: Create a filter data for only CA CC
             mask = dict0[dict0_fn]["data"][column_map["UNITID"]].isin(self.ccc_ids)
 
-            ## Step 2.9: Add the list of tuples of dictionaries
+            ## Step 3.0: Add the list of tuples of dictionaries
             if len(dict0[dict0_fn]["data"][mask]) < 1:
                 pass
                 # print(file_pair)
