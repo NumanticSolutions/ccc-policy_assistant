@@ -41,7 +41,7 @@ class CCCPolicyAssistant:
     name for the vector database. """
 
     def __init__(self, **kwargs):
-        self.version = "25.01.30"
+        self.version = "25.02.24"
 
         self.transcript_name_base = "cccbot_transcript"
         self.transcript_path = "./local_transcripts/"
