@@ -13,7 +13,7 @@ import google.oauth2.credentials
 from google.auth import compute_engine
 import google.auth.transport.requests
 
-import pandas_gbq as gbq
+# import pandas_gbq as gbq
 
 # def get_gcpsecrets(project_id,
 #                    secret_id,
