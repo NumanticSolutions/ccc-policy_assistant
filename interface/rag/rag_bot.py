@@ -2,8 +2,11 @@
 # MIT License
 #
 
-import sys, os
-import re
+import sys, os, io
+
+from google.cloud import storage
+import pandas as pd
+
 from langchain_core.tools import tool
 from langgraph.graph import MessagesState, StateGraph
 from langchain_core.messages import SystemMessage
@@ -19,6 +22,12 @@ import vertexai
 from langchain.tools.base import StructuredTool
 from langgraph.checkpoint.memory import MemorySaver
 
+from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
+from langchain.agents import AgentType
+from langchain_experimental.tools import PythonAstREPLTool
+
+from langchain_core.messages import HumanMessage, AIMessage
+
 ########## Change for rag testing
 sys.path.insert(0, "utils")
 sys.path.insert(0, "../../interface/utils")
@@ -33,15 +42,39 @@ class State(TypedDict):
 
 
 class CCCPolicyAssistant:
-    """ BotCCCGlobals class holds globals for a chatbot based on a
-    pre-trained model (phi3) and document retrieval from a vector
-    database (ChromaDB). It includes a range of defaults, including
-    an (optional) succinctness constraint, the default question, the
-    file name for any saved transcripts, and the path & collection
-    name for the vector database. """
+    '''
+    The CCCPolicyAssistant class provides full functionality for a large language model
+    chatbot covering policy issues related to California community colleges. It is an
+    experimental tool created by the Numantic Solutions team that is designed to
+    demonstrate how such tools can be used to provide a public service.
+    More information can be found at Numanticsolutions.com.
+
+    The primary building blocks are LangGraph (www.langchain.com/langgraph) components
+    wrapping Google Gemini (deepmind.google/technologies/gemini/) AI models. This tool
+    employs a Retrieval Augmented Generation (RAG) pipeline to respond to user queries.
+    The RAG tools pull curated information about California community colleges which
+    has been gathered primarily from web crawling and embedding (in an upstream
+    process).
+
+    The source information for this chatbot is stored on Google Cloud Storage.
+
+    There are two main tools supporting the LLM:
+
+    - retrieve - for searching a Chroma vector database with web page and PDF text
+    - query_data - for querying Pandas dataframes
+
+    The RAG workflow responds to user requests by
+        1. Conducting a vector search for similar chunked documents
+        2. Feeding these documents into the LLM prompt (unless a CSV is found as noted in 3)
+        3. Running a Pandas agent if any of the vector searches point to variables in a
+           curated CSV files
+        4. Providing results to the user
+
+    '''
 
     def __init__(self, **kwargs):
         self.version = "25.02.24"
+        self.dot_env_path = "../data/environment"
 
         self.transcript_name_base = "cccbot_transcript"
         self.transcript_path = "./local_transcripts/"
@@ -54,14 +87,15 @@ class CCCPolicyAssistant:
         self.gcs_embeddings_bucket_name = "ccc-chromadb-vai-2"
         self.gcs_embeddings_directory = ""
 
+        self.gcs_csv_file_bucket_name = "ccc-crawl_data"
+        self.gcs_csv_file_directory = "{}/zipcsv_files/prep"
+
         self.embedding_model = "text-embedding-004"
         self.embedding_num_batch = 5
         self.embeddings_local_path = "data/local_chromadb/"
-        # self.embeddings_local_path = ("/Users/stephengodfrey/OneDrive - numanticsolutions.com"
-        #                               "/Engagements/Projects/ccc_policy_assistant/data/embeddings-vai")
 
-        self.llm_model = "gemini-1.5-pro"
-         # self.llm_model = "gemini-2.0-flash-exp"
+        # self.llm_model = "gemini-1.5-pro"
+        self.llm_model = "gemini-2.0-flash"
         self.llm_model_max_output_tokens = 8192
         self.llm_model_temperature = 0.2
         self.llm_model_top_p = 0.8
@@ -72,21 +106,6 @@ class CCCPolicyAssistant:
         self.retriever_search_kwargs = {"k": 3}
 
         self.default_question = "What shall we discuss?"
-        # self.be_succinct = ('Please provide only a one or two word answer' +
-        #                     'Be as succinct as possible when answering. ')
-        # self.prompt_template = """
-        #                         You are a California Community College AI assistant.
-        #                         You're tasked to answer the question given below,
-        #                         but only based on the context provided.
-        #                         context: {context}
-        #                         question: {input}
-        #                         If you cannot find an answer ask the user to rephrase the question.
-        #                         answer:
-        #                        """
-        # self.prompt_template = ("You are a California Community College AI assistant. "
-        #                         "Use the following pieces of context to answer the question at the end. "
-        #                         "If you don't know the answer, just say that you don't know, "
-        #                         "don't try to make up an answer. ")
         self.prompt_template = ("You are a California Community College AI assistant. "
                                 "Use the following pieces of context and your knowledge base "
                                 "If the context does not contain the answer use your "
@@ -99,20 +118,22 @@ class CCCPolicyAssistant:
         self.conv_chain_chain_type = "stuff"
         self.conv_chain_chain_type_verbose = True
         self.conv_chain_chain_type_return_source_documents = True
+        self.chat_bot_verbose = True
 
         self.doc_search_retrieval_k = 4
 
         # Update any keyword args
         self.__dict__.update(kwargs)
 
-        creds = ApiAuthentication()
+        # Get creds if needed
+        if len(self.dot_env_path) > 0:
+            creds = ApiAuthentication(dotenv_path=self.dot_env_path)
 
-        # LangSmith
-        os.environ["LANGCHAIN_TRACING_V2"] = "true"
-        # os.environ["LANGCHAIN_API_KEY"] = creds.apis_configs["LANGCHAIN_API_KEY"]    [2502] n8
-
-        # Google
-        # os.environ["GOOGLE_API_KEY"] = creds.apis_configs["GOOGLE_API_KEY"]          [2502] n8
+            # LangSmith
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            os.environ["LANGCHAIN_API_KEY"] = creds.apis_configs["LANGCHAIN_API_KEY"]
+            # Google
+            os.environ["GOOGLE_API_KEY"] = creds.apis_configs["GOOGLE_API_KEY"]
 
         ### Step 2: Initialize Vertex AI
         vertexai.init(project=self.gcp_project_id,
@@ -158,7 +179,6 @@ class CCCPolicyAssistant:
 
         return db
 
-
     # @tool(response_format="content_and_artifact")
     def retrieve(self, query: str):
         """Retrieve information related to a query."""
@@ -166,32 +186,86 @@ class CCCPolicyAssistant:
         self.retrieved_docs = self.vector_store.similarity_search(query,
                                                                   k=self.doc_search_retrieval_k)
 
-        # Get documents before and after
+        # Get all documents from these web pages
         self.extended_retrieved_docs = []
-        for i, doc in enumerate(self.retrieved_docs):
+        for doc in self.retrieved_docs:
 
-            # Get dall documents from this source
+            # Get all documents from this source
             self.extended_retrieved_docs.append(self.vector_store.get(where={"page_url": {"$eq": doc.metadata["page_url"]}}))
 
-            # Add the retrieved doc
-            self.extended_retrieved_docs.append(doc)
+        # Get the full texts of the extended retrieved  docs
+        self.ext_docs_texts = [" ".join(doc["documents"]) for doc in self.extended_retrieved_docs]
 
-        self.extended_retrieved_docs = self.retrieved_docs
+        # Get a list of CSV files returned by the doc search (if any)
+        # This returns a list of tuples with this format (source, file_name)
+        self.retrieved_csv_files = []
+        self.query_data_result = "" # O Overwrite this if do a CSV query
+        for doc in self.retrieved_docs:
+            if doc.metadata["input_type"].endswith(".csv"):
+                self.retrieved_csv_files.append(dict(source=doc.metadata["source"],
+                                                     input_type=doc.metadata["input_type"],
+                                                     seed_url=doc.metadata["seed_url"]))
 
-        serialized = "\n\n".join(
+        # create a serialized version of retrieved docs
+        self.serialized = "\n\n".join(
             (f"Source: {doc.metadata}\n" f"Content: {doc.page_content}")
-            for doc in self.extended_retrieved_docs
+            for doc in self.retrieved_docs
         )
 
-        return serialized, self.extended_retrieved_docs
+        return self.serialized, self.retrieved_docs
+
+    def query_data(self, state: MessagesState):
+        '''
+        Use Pandas to query CSV data loaded into a dataframe
+
+        '''
+
+        # Read the CSV file
+        if len(self.retrieved_csv_files) > 0:
+            idx0 = 0
+            df = self.read_csv_file(file_source=self.retrieved_csv_files[idx0]["source"],
+                                    file_name=self.retrieved_csv_files[idx0]["input_type"])
+
+            # Create a pandas agent
+            prefix = ("This dataframe only contains information on California"
+                            "community colleges and no other schools. If the user asks "
+                            "about california community colleges use all rows in the "
+                            "dataframe. ")
+            agent_executor = create_pandas_dataframe_agent(self.llm,
+                                                           df=df,
+                                                           agent_type="tool-calling",
+                                                           prefix=prefix,
+                                                           verbose=self.chat_bot_verbose,
+                                                           allow_dangerous_code=True)
+
+            msg = [m for m in state["messages"] if m.type == "human"]
+
+            response = agent_executor.invoke(msg)
+
+            src_des = ("The data used by policy assistant to answer this question can be found at {} "
+                       "in the {} file. You may want to visit that site to validate this result "
+                       "and continue your research. "
+                       "This tool and this feature are still under development and mistakes can be made. "
+                       "Please validate all results. ").format(self.retrieved_csv_files[idx0]["seed_url"],
+                                                               self.retrieved_csv_files[idx0]["input_type"])
+
+            self.query_data_result = "{} {}".format(response["output"], src_des)
+
+            return {"messages": [AIMessage(self.query_data_result)]}
+
+        else:
+            return None
+
 
     # Step 1: Generate an AIMessage that may include a tool-call to be sent.
     def query_or_respond(self, state: MessagesState):
         """Generate tool call for retrieval or respond."""
 
-        # llm_with_tools = self.llm.bind_tools([self.retrieve])
+        # llm_with_tools = self.llm.bind_tools([self.retrieve,
+        #                                       self.query_data])
         llm_with_tools = self.llm.bind_tools([self.retrieve])
         response = llm_with_tools.invoke(state["messages"])
+
         # MessagesState appends messages to state instead of overwriting
         return {"messages": [response]}
 
@@ -199,6 +273,7 @@ class CCCPolicyAssistant:
     # Step 3: Generate a response using the retrieved content.
     def generate(self, state: MessagesState):
         """Generate answer."""
+
         # Get generated ToolMessages
         recent_tool_messages = []
         for message in reversed(state["messages"]):
@@ -243,6 +318,7 @@ class CCCPolicyAssistant:
         # Step 16: Build graph
         graph_builder.add_node(self.query_or_respond)
         graph_builder.add_node(tools)
+        graph_builder.add_node(self.query_data)
         graph_builder.add_node(self.generate)
 
         graph_builder.set_entry_point("query_or_respond")
@@ -251,7 +327,8 @@ class CCCPolicyAssistant:
             tools_condition,
             {END: END, "tools": "tools"},
         )
-        graph_builder.add_edge("tools", "generate")
+        graph_builder.add_edge("tools", "query_data")
+        graph_builder.add_edge("query_data", "generate")
         graph_builder.add_edge("generate", END)
 
         memory = MemorySaver()
@@ -262,14 +339,18 @@ class CCCPolicyAssistant:
 
         return graph
 
-    def show_conversation(self, input_message: str, verbose=False):
+    def show_conversation(self, input_message: str):
+        '''
+        Method to output the chatbot conversation
+        '''
+
         self.saved_steps = []
         for step in self.graph.stream(
             {"messages": [{"role": "user", "content": input_message}]},
             stream_mode="values",
             config=self.config
         ):
-            if verbose:
+            if self.chat_bot_verbose:
                 step["messages"][-1].pretty_print()
                 self.saved_steps.append(step)
 
@@ -277,12 +358,37 @@ class CCCPolicyAssistant:
                 self.ai_response = step["messages"][-1].content
 
             try:
-                self.source_urls = list(set([(doc.metadata["seed_url"], doc.metadata["page_url"]) \
+                self.retrieved_urls = list(set([(doc.metadata["seed_url"], doc.metadata["page_url"]) \
                                              for doc in self.retrieved_docs]))
 
             except:
-                self.source_urls = []
+                self.retrieved_urls = []
 
+    def read_csv_file(self, file_source, file_name):
+        '''
+        Method to read a csv file from GCS
+        '''
 
+        # Create a storage client
+        storage_client = storage.Client(project=self.gcp_project_id)
+
+        # Get the bucket
+        bucket = storage_client.bucket(bucket_name=self.gcs_csv_file_bucket_name)
+
+        # Note: Client.list_blobs requires at least package version 1.17.0.
+        blobs = storage_client.list_blobs(bucket,
+                                          prefix=self.gcs_csv_file_directory.format(file_source))
+
+        # Note: The call returns a response only when the iterator is consumed.
+        for blob in blobs:
+            if blob.name.find(file_name) >= 0:
+                # Get the blob
+                blob_file = bucket.blob(blob.name)
+
+                # Works
+                data = blob_file.download_as_bytes()
+                return pd.read_csv(io.BytesIO(data))
+
+        return None
 
 

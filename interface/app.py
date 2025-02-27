@@ -67,9 +67,13 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 if "bot" not in st.session_state:
-    # st.session_state["bot"] = rb1.CCCPolicyAssistant()
-    st.session_state["bot"] = CCCPolicyAssistant()
-    # st.write(st.session_state["bot"])
+    st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name = "crawl_docs-vai-2",
+                                                 chat_bot_verbose=False,
+                                                 dot_env_path = "../data/environment")
+
+    # # For use when API keys are in GCP secrets
+    # st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name = "crawl_docs-vai-2",
+    #                                              chat_bot_verbose=False)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -133,28 +137,23 @@ if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     # Get the AI assistant's response
-    # response = st.session_state["bot"].graph.invoke({"question": user_input})
-    response = st.session_state["bot"].show_conversation(input_message=user_input, verbose=False)
-    # response = bot.graph.invoke({"question": user_input})
+    st.session_state["bot"].show_conversation(input_message=user_input)
 
-    # Extract metadata links
-    # context_urls = []
-    # for doc in response["context"]:
-    #     if "url" in doc.metadata.keys():
-    #         context_urls.append(doc.metadata["url"])
-    # context_urls = list(set(context_urls))
+    # Get retrieved urls
+    retrieved_urls = ["- [{}]({})\n".format(up[0], up[1]) for up in st.session_state["bot"].retrieved_urls]
+    retrieved_urls = list(set(retrieved_urls))
 
-    context_urls = st.session_state["bot"].source_urls
+    # Create a single string of retrieved URLs
+    res_phrase = ""
+    if len(retrieved_urls) > 0:
+        res_phrase = "\n\nThese references might be useful: \n{}".format(" ".join(retrieved_urls))
 
-    # Converted URLs to a Markdown list
-    s = "\n"
-    for i in context_urls:
-        s += "- " + i + "\n"
+    # Combine into a single response
+    ai_response = "{} {}".format(st.session_state["bot"].ai_response, res_phrase)
 
-    # Extract the AI response and add URls for context
-    # ai_response = "{} These references might be useful: {}".format(response["answer"], s)
-    if len(context_urls) > 0:
-        ai_response = "{} These references might be useful: {}".format(st.session_state["bot"].ai_response, s)
+    # Add query result response
+    if len(st.session_state["bot"].query_data_result) > 0:
+        ai_response = "{}\n{}".format(ai_response, st.session_state["bot"].query_data_result)
 
     # Store AI's response in the chat history
     st.session_state.messages.append({"role": "assistant", "content": ai_response})
