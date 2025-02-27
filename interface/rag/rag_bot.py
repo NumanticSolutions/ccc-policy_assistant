@@ -73,7 +73,7 @@ class CCCPolicyAssistant:
     '''
 
     def __init__(self, **kwargs):
-        self.version = "25.02.24"
+        self.version = "25.02.26"
         self.dot_env_path = "../data/environment"
 
         self.transcript_name_base = "cccbot_transcript"
