@@ -67,13 +67,13 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 if "bot" not in st.session_state:
-    st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name = "crawl_docs-vai-2",
-                                                 chat_bot_verbose=False,
-                                                 dot_env_path = "../data/environment")
+    # st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name = "crawl_docs-vai-2",
+    #                                              chat_bot_verbose=False,
+    #                                              dot_env_path = "../data/environment")
 
     # # For use when API keys are in GCP secrets
-    # st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name = "crawl_docs-vai-2",
-    #                                              chat_bot_verbose=False)
+    st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name = "crawl_docs-vai-2",
+                                                 chat_bot_verbose=False)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []

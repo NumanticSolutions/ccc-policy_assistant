@@ -73,7 +73,7 @@ class CCCPolicyAssistant:
     '''
 
     def __init__(self, **kwargs):
-        self.version = "25.02.26"
+        self.version = "25.02.27"
         self.dot_env_path = "../data/environment"
 
         self.transcript_name_base = "cccbot_transcript"
@@ -227,10 +227,10 @@ class CCCPolicyAssistant:
                                     file_name=self.retrieved_csv_files[idx0]["input_type"])
 
             # Create a pandas agent
-            prefix = ("This dataframe only contains information on California"
-                            "community colleges and no other schools. If the user asks "
-                            "about california community colleges use all rows in the "
-                            "dataframe. ")
+            prefix = ("This dataframe only contains information on California "
+                      "community colleges and no other schools. If the user asks "
+                      "about california community colleges or schools use all rows in the "
+                      "dataframe. ")
             agent_executor = create_pandas_dataframe_agent(self.llm,
                                                            df=df,
                                                            agent_type="tool-calling",
