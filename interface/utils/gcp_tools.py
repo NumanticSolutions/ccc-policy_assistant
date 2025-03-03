@@ -7,6 +7,8 @@
 import os
 import io
 
+import pandas as pd
+
 from google.cloud import storage
 import google
 import google.oauth2.credentials
@@ -191,3 +193,41 @@ def idtoken_from_metadata_server(url: str, service_account_email: str):
     credentials.refresh(request)
     # print(credentials.token)
     print("Generated ID token.")
+
+
+def read_csv_file_into_pandas(gcs_project_id, gcs_bucket_name,
+                              gcs_directory, file_name,
+                              exact=False):
+    '''
+    Method to read a csv file from GCS into a pandas dataframe
+
+    Inputs
+        exact: a boolean indicating whether the filename needs to be an exact match
+        or just a search string
+    '''
+
+    # Initialize GCS client
+    storage_client = storage.Client(project=gcs_project_id)
+    bucket = storage_client.bucket(bucket_name=gcs_bucket_name)
+
+    # Note: Client.list_blobs requires at least package version 1.17.0.
+    blobs = storage_client.list_blobs(bucket, prefix=gcs_directory)
+
+    # Note: The call returns a response only when the iterator is consumed.
+    for blob in blobs:
+        if blob.name.find(file_name) >= 0:
+
+            # If exact, the file_name must be an exact match
+            if exact == True and blob.name != file_name:
+                pass
+
+            else:
+                # Get the blob
+                blob_file = bucket.blob(blob.name)
+
+                # Works
+                data = blob_file.download_as_bytes()
+                return pd.read_csv(io.BytesIO(data))
+
+    return None
+

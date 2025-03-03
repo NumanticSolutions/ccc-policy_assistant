@@ -223,6 +223,9 @@ class CCCPolicyAssistant:
         # Read the CSV file
         if len(self.retrieved_csv_files) > 0:
             idx0 = 0
+
+            #############
+            # We should update to the read_csv_file_into_pandas function in GCP tools
             df = self.read_csv_file(file_source=self.retrieved_csv_files[idx0]["source"],
                                     file_name=self.retrieved_csv_files[idx0]["input_type"])
 
@@ -367,6 +370,10 @@ class CCCPolicyAssistant:
     def read_csv_file(self, file_source, file_name):
         '''
         Method to read a csv file from GCS
+
+        ##################
+        Update to read_csv_file_into_pandas from gcp_tools
+
         '''
 
         # Create a storage client
