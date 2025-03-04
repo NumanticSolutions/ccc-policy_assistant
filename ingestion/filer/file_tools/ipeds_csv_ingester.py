@@ -144,26 +144,41 @@ class IpedsCsvIngester:
             # Identify String Columns
             d0_str_cols = dict0[dict0_fn]["data"].select_dtypes(include=['object']).columns
 
-            # Cells with only blanks replace with null
-            ###############
+            ## Step 2.7: Replace non-alphanumeric values with null
+            for col in dict0[dict0_fn]["data"].columns:
+
+                if dict0[dict0_fn]["data"][col].dtype == "object":
+                    dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].apply(self.remove_non_alphanumeric)
+
+                    ###############
+                    try:
+                        if dict0[dict0_fn]["data"][col].str.isnumeric().sum() == dict0[dict0_fn]["data"][col].count():
+                            dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].astype("float64")
+                    except:
+                        print(file_pair)
+
+                else:
+                    dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].astype("float64")
+
+            ## Step 2.7: Cells with only blanks replace with null
             dict0[dict0_fn]["data"][d0_str_cols] = \
                 dict0[dict0_fn]["data"][d0_str_cols].replace(to_replace=r"^\s+$",
                                                                 value=np.nan,
                                                                 regex=True)
 
-            ## Step 2.7: Replace shorthand column names with long names
+            ## Step 2.8: Replace shorthand column names with long names
             column_map = {k: v for k, v in zip(dict1[dict1_fn][vl_key]["varname"],
                                                dict1[dict1_fn][vl_key]["varTitle"])}
             dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"].rename(columns=column_map)
 
-            ## Step 2.8: Remove columns that were not in the map and for which we don't have long names
+            ## Step 2.9: Remove columns that were not in the map and for which we don't have long names
             ln_cols = [c for c in column_map.values() if c in dict0[dict0_fn]["data"].columns]
             dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"][ln_cols]
 
-            ## Step 2.9: Create a filter data for only CA CC
+            ## Step 3.0: Create a filter data for only CA CC
             mask = dict0[dict0_fn]["data"][column_map["UNITID"]].isin(self.ccc_ids)
 
-            ## Step 3.0: Add the list of tuples of dictionaries
+            ## Step 3.1: Add the list of tuples of dictionaries
             if len(dict0[dict0_fn]["data"][mask]) < 1:
                 pass
                 # print(file_pair)
@@ -171,7 +186,7 @@ class IpedsCsvIngester:
                 dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"][mask]
                 dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"].reset_index(drop=True)
 
-                ## Step 2.7: Add these to the list of tuples of dictionaries
+                ## Step 3.2: Add these to the list of tuples of dictionaries
                 self.df_tup_dicts.append((dict0[dict0_fn], dict1[dict1_fn], doc_descrs))
 
 
@@ -317,12 +332,26 @@ class IpedsCsvIngester:
 
             # Save data in a CSV file
             blob = self.gcs_bucket.blob(os.path.join("{}prep".format(self.input_data_path), res_filename))
-            blob.upload_from_string(ftpl[0]["data"].to_csv(), 'text/csv')
+            blob.upload_from_string(ftpl[0]["data"].to_csv(), "text/csv")
 
         # Save the descriptions data frame
         desc_filename = "descriptions_{}.csv".format(prep_dt)
 
         # Save data in a CSV file
         blob = self.gcs_bucket.blob(os.path.join("{}prep".format(self.input_data_path), desc_filename))
-        blob.upload_from_string(self.df_descs.to_csv(), 'text/csv')
+        blob.upload_from_string(self.df_descs.to_csv(), "text/csv")
 
+    def remove_non_alphanumeric(self, cell_value):
+        '''
+        Replace non alphanumeric values with np.nan; otherwise return cell_value.
+        :param text:
+        :return:
+
+        '''
+
+        s_cell_value = str(cell_value)
+
+        if s_cell_value.isalnum():
+            return cell_value
+        else:
+            return np.nan
