@@ -6,6 +6,8 @@
 # https://nces.ed.gov/ipeds
 
 import os, sys
+from dataclasses import field
+
 import pandas as pd
 import numpy as np
 import zipfile
@@ -99,12 +101,12 @@ class IpedsCsvIngester:
         '''
 
         ## Step 1: Get a list of files to read - list of tuples
-        file_pairs = self.get_files_to_read(data_path=self.input_data_path)
+        self.get_files_to_read()
 
         ## Step 2: For each file pair in list - read from the zip file
         ## this is a list of tuples in which each tuple element is a dictionary of datafrmaes
         self.df_tup_dicts = []
-        for file_pair in file_pairs:
+        for file_pair in self.file_pairs:
 
             # print(file_pair)
 
@@ -140,45 +142,46 @@ class IpedsCsvIngester:
                                                       doc_over,
                                                       col_longnames)
 
-            ## Step 2.6: Replace blank strings with Null values
-            # Identify String Columns
-            d0_str_cols = dict0[dict0_fn]["data"].select_dtypes(include=['object']).columns
+            ## Step 2.6: Add a college_name column to the datafile
+            # Create a map of IPEDSID to Name
+            ipedsid_to_name_map = {k: v for k, v in zip(self.df_ccc["IPEDSID"],
+                                                        self.df_ccc["NAME"])}
+            if "UNITID" in dict0[dict0_fn]["data"].columns:
+                dict0[dict0_fn]["data"]["College Name"] = dict0[dict0_fn]["data"]["UNITID"].map(ipedsid_to_name_map)
 
             ## Step 2.7: Replace non-alphanumeric values with null
             for col in dict0[dict0_fn]["data"].columns:
 
-                if dict0[dict0_fn]["data"][col].dtype == "object":
-                    dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].apply(self.remove_non_alphanumeric)
+                # Replace blank strings and one-character non-alphnum values with null
+                dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].apply(self.remove_non_alphanumeric)
 
-                    ###############
-                    try:
-                        if dict0[dict0_fn]["data"][col].str.isnumeric().sum() == dict0[dict0_fn]["data"][col].count():
-                            dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].astype("float64")
-                    except:
-                        print(file_pair)
+                # Convert all numerics to float for consistency
+                if dict0[dict0_fn]["data"][col].dtype not in [np.int64, np.float64]:
+
+                    # Only convert if all cell values are numbers
+                    if dict0[dict0_fn]["data"][col].str.isnumeric().sum() == dict0[dict0_fn]["data"][col].count():
+                        dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].astype("float64")
 
                 else:
+
                     dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].astype("float64")
 
-            ## Step 2.7: Cells with only blanks replace with null
-            dict0[dict0_fn]["data"][d0_str_cols] = \
-                dict0[dict0_fn]["data"][d0_str_cols].replace(to_replace=r"^\s+$",
-                                                                value=np.nan,
-                                                                regex=True)
 
             ## Step 2.8: Replace shorthand column names with long names
-            column_map = {k: v for k, v in zip(dict1[dict1_fn][vl_key]["varname"],
+            column_map = {k: v.strip() for k, v in zip(dict1[dict1_fn][vl_key]["varname"],
                                                dict1[dict1_fn][vl_key]["varTitle"])}
+            column_map["College Name"] = "College Name"
             dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"].rename(columns=column_map)
 
             ## Step 2.9: Remove columns that were not in the map and for which we don't have long names
-            ln_cols = [c for c in column_map.values() if c in dict0[dict0_fn]["data"].columns]
+            columns_keep = dict0[dict0_fn]["data"].columns.tolist()
+            ln_cols = [c.strip() for c in column_map.values() if c in columns_keep]
             dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"][ln_cols]
 
             ## Step 3.0: Create a filter data for only CA CC
             mask = dict0[dict0_fn]["data"][column_map["UNITID"]].isin(self.ccc_ids)
 
-            ## Step 3.1: Add the list of tuples of dictionaries
+            # Step 3.1: Add the list of tuples of dictionaries
             if len(dict0[dict0_fn]["data"][mask]) < 1:
                 pass
                 # print(file_pair)
@@ -211,7 +214,7 @@ class IpedsCsvIngester:
             return "dat"
 
 
-    def get_files_to_read(self, data_path):
+    def get_files_to_read(self):
         '''
         Functio to return a list of tuples providing the name of the
         data file and the associated dictionary file
@@ -234,10 +237,9 @@ class IpedsCsvIngester:
 
         # Create tuples of files to read - checking that the data file can be
         # found in the dictionary files
-        read_files = [(f, "{}_Dict.zip".format(os.path.splitext(f)[0])) for f in dat_files \
-                      if "{}_Dict".format(os.path.splitext(f)[0]) in dict_files_roots]
+        self.file_pairs = [(f, "{}_Dict.zip".format(os.path.splitext(f)[0])) for f in dat_files \
+                           if "{}_Dict".format(os.path.splitext(f)[0]) in dict_files_roots]
 
-        return read_files
 
 
     def read_zip_file(self, data_path: str,
@@ -349,9 +351,13 @@ class IpedsCsvIngester:
 
         '''
 
+
         s_cell_value = str(cell_value)
 
-        if s_cell_value.isalnum():
-            return cell_value
-        else:
+        # If cell is all blanks or 1 non alphanumeric character return null
+        if len(s_cell_value.strip()) == 0 or (len(s_cell_value) == 1 and \
+                                              s_cell_value.isalnum() == False):
             return np.nan
+
+        else:
+            return cell_value
