@@ -73,7 +73,7 @@ class CCCPolicyAssistant:
     '''
 
     def __init__(self, **kwargs):
-        self.version = "25.02.27"
+        self.version = "25.03.13"
         self.dot_env_path = "../data/environment"
 
         self.transcript_name_base = "cccbot_transcript"
@@ -119,6 +119,8 @@ class CCCPolicyAssistant:
         self.conv_chain_chain_type_verbose = True
         self.conv_chain_chain_type_return_source_documents = True
         self.chat_bot_verbose = True
+
+        self.query_data_result = ""  # O Overwrite this if do a CSV query
 
         self.doc_search_retrieval_k = 4
 
@@ -199,7 +201,6 @@ class CCCPolicyAssistant:
         # Get a list of CSV files returned by the doc search (if any)
         # This returns a list of tuples with this format (source, file_name)
         self.retrieved_csv_files = []
-        self.query_data_result = "" # O Overwrite this if do a CSV query
         for doc in self.retrieved_docs:
             if doc.metadata["input_type"].endswith(".csv"):
                 self.retrieved_csv_files.append(dict(source=doc.metadata["source"],

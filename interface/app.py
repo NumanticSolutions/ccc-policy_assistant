@@ -51,14 +51,9 @@ bot_summary = ("This an experimental chatbot employing Artificial Intelligence t
                "information related to community colleges. Some examples might include board members, "
                "administrators, staff, students, community activists or legislators. \n")
 
-invite = ("By making this tool available, we hope to demonstrate "
-          "how policy advocacy can be supported through the use of technology. "
-          "If you want to learn more or have thoughts about this application or similar "
-          "tools or the underlying technology, please reach out to Steve or Nathan at "
-          ":primary[info@numanticsolutions.com]")
+
 
 st.text(bot_summary)
-st.markdown(invite)
 st.divider()
 
 ########## Handle conversations in Streamlit
@@ -72,9 +67,9 @@ if "bot" not in st.session_state:
     #                                              dot_env_path = "../data/environment")
 
     # # For use when API keys are in GCP secrets
-    st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name = "crawl_docs-vai-2",
+    st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name="crawl_docs-vai-2",
                                                  chat_bot_verbose=False,
-                                                 dot_env_path = "")
+                                                 dot_env_path="")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -85,17 +80,27 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 with st.sidebar:
-    sidebar_msg = ("This is an experimental chatbot that is still under development. "
-                   "Please reach out with feedback, suggestions and comments."
-                   )
-    github_url = "https://github.com/NumanticSolutions/ccc-policy_assistant"
-    github_msg = ("Code can be found at [github.com/NumanticSolutions]({})").format(github_url)
+    # sidebar_msg = ("This is an experimental chatbot that is still under development. "
+    #                "Please reach out with feedback, suggestions and comments."
+    #                )
+
+    sidebar_msg = ("Overview")
 
     st.header(sidebar_msg)
-    st.markdown(github_msg)
+    st.text("\n\n\n")
 
-    tab1, tab2 = st.tabs(["Example Questions", "Terms & Privacy"])
+    invite = ("By making this tool available, we hope to demonstrate "
+              "how policy advocacy can be supported through the use of technology. ")
+    invite2 = ("If you want to learn more or have thoughts about this application, similar "
+              "tools or the underlying technology, please reach out to Steve or Nathan at "
+              ":primary[info@numanticsolutions.com] ")
 
+    st.markdown(invite)
+    st.markdown(invite2)
+    st.text("\n\n\n")
+
+
+    tab1, tab2 = st.tabs(["Example Questions", "Useful Links"])
     with tab1:
         st.header("Example Questions")
         st.text("• How many districts are there in the California community college system?")
@@ -104,17 +109,20 @@ with st.sidebar:
         st.text("• How many California community colleges partner with the California Department of Corrections and Rehabilitation (CDCR) to provide in‑person courses?")
         st.text("• What are the responsibilities of the board members of a California community college?")
     with tab2:
-        st.header("Terms & Privacy")
-        terms_url = "https://numanticsolutions.com/#terms"
-        terms_msg = ("The full terms of use can be found [here]({}).").format(terms_url)
-        st.markdown(terms_msg)
+        links = ("- [C3PA Studio](https://c3pa-studio-1062597788108.us-central1.run.app/)\n"
+                 "- [GitHub](https://github.com/NumanticSolutions/ccc-policy_assistant)\n"
+                 "- [Numantic Solutions](https://numanticsolutions.com)\n\n"
+                 "- [Terms of Use](https://numanticsolutions.com/#terms)\n"
+                 "- [Privacy Policy](https://numanticsolutions.com/#privacy)\n"
+                 )
+        st.text("\n")
+        st.markdown(links)
 
-        privacy_url = "https://numanticsolutions.com/#privacy"
-        privacy_msg = ("A complete privacy policy is [here]({}). Note that for this assistant, sessions are logged for testing and development purposes.").format(privacy_url)
-        st.markdown(privacy_msg)
-
+        st.text("\n")
         version_msg = ("Version : " + st.session_state["bot"].version)
         st.markdown(version_msg)
+
+
 
 # displays the chat history when app is rerun
 for message in st.session_state.messages:
