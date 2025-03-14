@@ -27,6 +27,8 @@ dependencies:
       - vertexai
       - google-generativeai>=0.8.2
 
+      - openai
+
       - pandas-gbq    
 
       - streamlit
@@ -45,6 +47,7 @@ dependencies:
       - langchain-google-vertexai
       - langgraph
       - langchain_experimental
+      - langsmith
       - tabulate
 
       - pypdf

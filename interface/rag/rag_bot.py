@@ -80,7 +80,7 @@ class CCCPolicyAssistant:
         self.transcript_path = "./local_transcripts/"
         self.transcript_gcs_bucket = "cccbot-transcripts"
         self.transcript_gcs_directory = ""
-        self.chroma_collection_name = "crawl_docs1"
+        self.chroma_collection_name = ""
 
         self.gcp_project_id = "eternal-bongo-435614-b9"
         self.gcp_location = "us-central1"
