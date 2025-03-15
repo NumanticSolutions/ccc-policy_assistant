@@ -199,6 +199,8 @@ class EmbedDocuments:
         # For each source, read all the text files
         input_sources = self.input_files["source"].unique().tolist()
 
+        srcs = []
+
         for input_source in input_sources:
 
             # Create a mask for this source
@@ -258,6 +260,8 @@ class EmbedDocuments:
                     # Reduce columns
                     src_df = src_df[self.input_df_cols]
 
+                    srcs.append(src_df)
+
                     # Chunk texts and add to docs
                     for idx in src_df.index:
 
@@ -271,6 +275,10 @@ class EmbedDocuments:
                             text.metadata["source_idx_i"] = str(i)
 
                         self.docs.extend(texts)
+
+        # Create a single dataframe with everything
+        self.srcs_df = pd.concat(objs=srcs)
+        self.srcs_df = self.srcs_df.reset_index(drop=True)
 
 
     def embed(self, meta_key="url",is_verbose=False):
