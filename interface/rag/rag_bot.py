@@ -131,11 +131,6 @@ class CCCPolicyAssistant:
         if len(self.dot_env_path) > 0:
             creds = ApiAuthentication(dotenv_path=self.dot_env_path)
 
-            # LangSmith
-            os.environ["LANGCHAIN_TRACING_V2"] = "true"
-            os.environ["LANGCHAIN_API_KEY"] = creds.apis_configs["LANGCHAIN_API_KEY"]
-            # Google
-            os.environ["GOOGLE_API_KEY"] = creds.apis_configs["GOOGLE_API_KEY"]
 
         ### Step 2: Initialize Vertex AI
         vertexai.init(project=self.gcp_project_id,
@@ -149,7 +144,10 @@ class CCCPolicyAssistant:
                                 top_p=self.llm_model_top_p)
 
         ### Step 4. Establish an embeddings model
-        self.embeddings = VertexAIEmbeddings(model=self.embedding_model)
+        self.embeddings = VertexAIEmbeddings(model_name=self.embedding_model,
+                                             project=self.gcp_project_id,
+                                             location=self.gcp_location
+                                             )
 
         ### Step 5: Establish vector store
         self.vector_store = self.setup_vectorstore()

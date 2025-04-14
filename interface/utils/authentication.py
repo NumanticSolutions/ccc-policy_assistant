@@ -55,9 +55,18 @@ class ApiAuthentication:
             self.apis_configs = dotenv_values(os.path.join(self.dotenv_path,
                                                            creds_file))
 
-        elif self.cred_source == "service_acct":
-            self.apis_configs["service_acct"] = json.load(open(os.path.join(self.creds_path,
-                                                self.creds_file)))
+            # LangSmith
+            os.environ["LANGCHAIN_TRACING_V2"] = "true"
+            os.environ["LANGCHAIN_API_KEY"] = self.apis_configs["LANGCHAIN_API_KEY"]
+            # Google
+            os.environ["GOOGLE_API_KEY"] = self.apis_configs["GOOGLE_API_KEY"]
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.apis_configs["GOOGLE_APPLICATION_CREDENTIALS"]
+        #
+        #
+        #
+        # elif self.cred_source == "service_acct":
+        #     self.apis_configs["service_acct"] = json.load(open(os.path.join(self.creds_path,
+        #                                                                     self.creds_file)))
 
 
 

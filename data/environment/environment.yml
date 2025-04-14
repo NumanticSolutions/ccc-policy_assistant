@@ -25,7 +25,8 @@ dependencies:
       - google.auth
       - google-cloud-bigquery
       - vertexai
-      - google-generativeai>=0.8.2
+      - google-genai
+      - google-adk
 
       - openai
 
@@ -39,16 +40,15 @@ dependencies:
       - matplotlib
 
       - langchain
-      - langchain_community
-      - langchain_chroma
-      - langchain_ollama
-      - langchain_openai
-      - langchain-google-community
+      - langchain-community
+      - langchain-chroma
+      - langchain-openai
       - langchain-google-vertexai
       - langgraph
-      - langchain_experimental
+      - langchain-experimental
       - langsmith
       - tabulate
+      - langchain-google-genai
 
       - pypdf
 

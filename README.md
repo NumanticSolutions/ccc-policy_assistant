@@ -8,7 +8,7 @@ This an experimental chatbot employing Artificial Intelligence tools to help use
 
 By making this tool available, we hope to demonstrate how policy advocacy can be supported through the use of technology. If you want to learn more or have thoughts about this application or similar tools or the underlying technology, please reach out.
 
-Mar 13, 2025
+Apr 14, 2025
 
 ## Contact
 
@@ -57,7 +57,7 @@ Although this tool is underdevelopment and its technological components are like
 
 At this time not all of these data sources have been ingested, but this list provides a good example of the types of sources we believe will be helpful to this policy assistant.
 
- **Source**                                                                                                                            | **Description**                                                                                                                                                                                    | 
+|  **Source**                                                                                                                           | **Description**                                                                                                                                                                                    | 
 |---------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [Wikipedia](https://en.wikipedia.org/wiki/California_Community_Colleges)                                                              | Wikipedia provides a free online encyclopedia including content on California Community Colleges.                                                                                                  | 
 | [Legislative Analyst’s Office](https://lao.ca.gov/)                                                                                   | The Legislative Analyst's Office (LAO) provides fiscal and policy advice to the California Legislature.                                                                                            | 
