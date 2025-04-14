@@ -6,7 +6,6 @@ This folder contains the tools for raw data ingestion. This data ingestion is pr
 
 Apr 14, 2025
 
-
 ## Configuration
 
 The crawl_configuration.csv file contains the configuration for seed URLs. Seed URLs provide the starting sites for web crawls which depending on depth and width crawls can crawl many web pages using URL links found on these pages.
