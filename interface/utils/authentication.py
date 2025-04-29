@@ -8,6 +8,7 @@ import json
 # Environment variables for API credential storage
 # import dotenv
 from dotenv import dotenv_values
+from dotenv import load_dotenv
 
 
 class ApiAuthentication:
@@ -49,24 +50,23 @@ class ApiAuthentication:
 
         self.apis_configs = {}
 
+        # check if .env in the directory
+        if ".env" not in os.listdir(self.dotenv_path):
+            msg = "No .env file found in dotenv_path directory: {}".format(self.dotenv_path)
+            raise ValueError(msg)
+
         # Get the dotenv configuration file
         if self.cred_source == "dotenv":
             creds_file = ".env"
             self.apis_configs = dotenv_values(os.path.join(self.dotenv_path,
                                                            creds_file))
 
-            # LangSmith
-            os.environ["LANGCHAIN_TRACING_V2"] = "true"
-            os.environ["LANGCHAIN_API_KEY"] = self.apis_configs["LANGCHAIN_API_KEY"]
-            # Google
-            os.environ["GOOGLE_API_KEY"] = self.apis_configs["GOOGLE_API_KEY"]
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = self.apis_configs["GOOGLE_APPLICATION_CREDENTIALS"]
-        #
-        #
-        #
-        # elif self.cred_source == "service_acct":
-        #     self.apis_configs["service_acct"] = json.load(open(os.path.join(self.creds_path,
-        #                                                                     self.creds_file)))
+    def set_environ_variables(self):
+        '''
+        Load environmental variables from a .env file
+        '''
+        load_dotenv(dotenv_path=os.path.join(self.dotenv_path, ".env"))
+
 
 
 

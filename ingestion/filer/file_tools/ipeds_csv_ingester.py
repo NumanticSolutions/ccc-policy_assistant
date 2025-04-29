@@ -135,12 +135,19 @@ class IpedsCsvIngester:
                     vl_key = key
             col_longnames = ", ".join(dict1[dict1_fn][vl_key]["varTitle"].tolist())
 
+            # create a data dictionary with short names mapped to long names
+            data_dict = ", ".join(["{}:: {}:::".format(sn, ln) for sn, ln in \
+                                   zip(dict1[dict1_fn][vl_key]["varname"].tolist(),
+                                       dict1[dict1_fn][vl_key]["varTitle"].tolist())])
+
             ## Step 2.5: Create a descriptive document
             doc_descrs = ("CSV data file name: {}. \n"
                           "Overview description of file contents: {}. \n"
-                          "Data columns: {}.").format(dict0_fn,
-                                                      doc_over,
-                                                      col_longnames)
+                          "Data columns: {}. \n"
+                          "Data dictionary: {}. \n").format(dict0_fn,
+                                                            doc_over,
+                                                            col_longnames,
+                                                            data_dict)
 
             ## Step 2.6: Add a college_name column to the datafile
             # Create a map of IPEDSID to Name
@@ -169,7 +176,7 @@ class IpedsCsvIngester:
 
             ## Step 2.8: Replace shorthand column names with long names
             column_map = {k: v.strip() for k, v in zip(dict1[dict1_fn][vl_key]["varname"],
-                                               dict1[dict1_fn][vl_key]["varTitle"])}
+                                                       dict1[dict1_fn][vl_key]["varTitle"])}
             column_map["College Name"] = "College Name"
             dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"].rename(columns=column_map)
 
