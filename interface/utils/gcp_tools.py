@@ -265,6 +265,40 @@ def read_csv_file_into_pandas(gcs_project_id, gcs_bucket_name,
 
     return None
 
+def write_pandas_as_csv_file_on_gcs(gcs_project_id,
+                                    df,
+                                    gcs_bucket_name,
+                                    gcs_directory,
+                                    file_name):
+    """
+    Writes a pandas DataFrame as a CSV file to a specified location on Google Cloud Storage (GCS).
+
+    This function uses the provided GCS project ID to initialize a GCS client and uploads the
+    DataFrame in CSV format to a specified bucket and directory under GCS.
+
+    Parameters:
+        gcs_project_id (str): The GCS project ID used to initialize the Storage client.
+        df (pandas.DataFrame): The pandas DataFrame to be written as a CSV file.
+        gcs_bucket_name (str): The name of the GCS bucket where the file will be stored.
+        gcs_directory (str): The directory within the GCS bucket to store the file.
+        file_name (str): The name of the CSV file to be uploaded to GCS.
+
+    Raises:
+        google.cloud.exceptions.GoogleCloudError: If any error occurs during file upload
+        to GCS.
+        AttributeError: If the bucket or blob methods are incorrectly used or if required
+        attributes are missing.
+        TypeError: If the provided DataFrame is not a pandas DataFrame or any arguments
+        have an incorrect type.
+    """
+
+    # Initialize GCS client
+    storage_client = storage.Client(project=gcs_project_id)
+    bucket = storage_client.bucket(bucket_name=gcs_bucket_name)
+
+    blob = bucket.blob(os.path.join(gcs_directory, file_name))
+    blob.upload_from_string(df.to_csv(), "text/csv")
+
 def save_file_to_bucket(gcs_project_id, gcs_bucket_name,
                         gcs_directory, file_name, content):
     '''
@@ -273,7 +307,7 @@ def save_file_to_bucket(gcs_project_id, gcs_bucket_name,
 
     # Set GCS class variables
     storage_client = storage.Client(project=gcs_project_id)
-    gcs_bucket = storage_client.bucket(gcs_bucket_name)
+    gcs_bucket = storage_client.bucket(bucket_name=gcs_bucket_name)
 
     # Save data in a CSV file
     blob = gcs_bucket.blob(os.path.join(gcs_directory, file_name))
@@ -310,7 +344,6 @@ def load_csv_to_bigquery(project_id, dataset_name, table_name, csv_filepath):
 
     print(f"Loaded {job.output_rows} rows into {dataset_name}.{table_name}")
 
-
 def create_dataset_if_not_exists(project_id, dataset_name):
     """Creates a BigQuery dataset if it does not already exist.
 
@@ -330,8 +363,11 @@ def create_dataset_if_not_exists(project_id, dataset_name):
         dataset = client.create_dataset(dataset, timeout=30)  # Make an API request.
         print(f"Created dataset {dataset_id}")
 
-def load_pandas_to_bigquery(project_id, df,
-                            dataset_id, table_name):
+def load_pandas_to_bigquery(project_id,
+                            df,
+                            dataset_id,
+                            table_name,
+                            if_exists="replace"):
     """Loads a Pandas Dataframe into a BigQuery table.
 
     Args:
@@ -346,30 +382,45 @@ def load_pandas_to_bigquery(project_id, df,
 
     pbq.to_gbq(dataframe=df,
                destination_table=table_id,
-               project_id=project_id)
+               project_id=project_id,
+               if_exists=if_exists)
 
+def list_bigquery_tables(project_id,
+                         dataset_name):
+    """
+    Fetches a list of tables from a specified BigQuery dataset.
 
-    # client = bigquery.Client(project=project_id)
-    #
-    # # Define how the data should be written
-    # job_config = bigquery.LoadJobConfig(
-    #     # WRITE_TRUNCATE: If the table already exists, BigQuery overwrites the table data.
-    #     # WRITE_APPEND: If the table already exists, BigQuery appends the data to the table. (Default)
-    #     # WRITE_EMPTY: If the table already exists and contains data, a 'duplicate' error is returned.
-    #     write_disposition="WRITE_TRUNCATE",
-    # )
+    This function connects to the Google BigQuery service and retrieves
+    a list of tables available in a specified dataset within a given
+    project.
 
-    # # Create the table reference
-    # # table_ref_full = f"{project_id}.{dataset_id}.{table_id}"
-    # # table_ref = client.dataset(dataset_id).table(table_id)
-    # #
-    # # # Start the load job
-    # # # The library handles serializing the DataFrame and uploading it
-    # # load_job = client.load_table_from_dataframe(dataframe=df,
-    # #                                             destination=table_ref,
-    # #                                             job_config=job_config
-    # #                                             )
-    #
-    # # Wait for the job to complete
-    # load_job.result()  # Waits for the job to finish
-    # # print("Table created.")
+    Parameters:
+    project_id (str): The ID of the Google Cloud project containing the
+      desired dataset.
+    dataset_name (str): The name of the dataset within the specified
+      project from which to retrieve the list of tables.
+
+    Returns:
+    google.cloud.bigquery.table.RowIterator: An iterator containing
+      metadata about each table in the specified dataset.
+
+    Raises:
+    google.api_core.exceptions.GoogleAPIError: If the request to the
+      BigQuery API fails.
+    google.api_core.exceptions.NotFound: If the specified dataset does
+      not exist.
+    google.api_core.exceptions.Forbidden: If access to the dataset is
+      denied.
+    """
+
+    # Construct a BigQuery client object.
+    client = bigquery.Client(project=project_id)
+    dataset_id = f"{project_id}.{dataset_name}"
+
+    # Table names
+    table_names = []
+    for table in client.list_tables(dataset=dataset_id):
+        table_names.append(table.table_id)
+
+    return table_names
+

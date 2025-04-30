@@ -57,19 +57,20 @@ class IpedsCsvIngester:
         '''
 
         self.gcp_project_id = "eternal-bongo-435614-b9"
-        self.gcs_bucket_name = "ccc-crawl_data"
+        # self.gcs_bucket_name = "ccc-crawl_data"
+        self.gcs_bucket_name = "ccc-crawl_data_xb"
         # self.input_data_path = ("/Users/stephengodfrey/OneDrive - numanticsolutions.com"
         #                         "/Engagements/Projects/ccc_policy_assistant/data/ipeds_files")
-        self.input_data_path = "ipeds/zipcsv_files/"
+        self.input_data_path = "crawl_data/ipeds/zipcsv_files/"
         self.filer_config_path = "../data/filer_params"
         self.ccc_listing_filename = "ccc-hifld_oes_wiki_cccco-2501.csv"
 
         # Update any key word args
         self.__dict__.update(kwargs)
 
-        # Set GCS class variables
-        self.storage_client = storage.Client(project=self.gcp_project_id)
-        self.gcs_bucket = self.storage_client.bucket(self.gcs_bucket_name)
+        # # Set GCS class variables
+        # self.storage_client = storage.Client(project=self.gcp_project_id)
+        # self.gcs_bucket = self.storage_client.bucket(self.gcs_bucket_name)
 
         # Get a list of CCC
         self.read_ccc_listing()
@@ -91,9 +92,7 @@ class IpedsCsvIngester:
         # Read CCC college
         self.df_ccc = pd.read_csv(filepath_or_buffer=os.path.join(self.filer_config_path,
                                                                   self.ccc_listing_filename), encoding="cp1252")
-
         self.ccc_ids = self.df_ccc["IPEDSID"].unique().tolist()
-
 
     def read_data_files(self):
         '''
@@ -141,10 +140,12 @@ class IpedsCsvIngester:
                                        dict1[dict1_fn][vl_key]["varTitle"].tolist())])
 
             ## Step 2.5: Create a descriptive document
-            doc_descrs = ("CSV data file name: {}. \n"
+            doc_descrs = ("BigQuery table name: {}. \n"
+                          "Source CSV data file name: {}. \n"
                           "Overview description of file contents: {}. \n"
                           "Data columns: {}. \n"
-                          "Data dictionary: {}. \n").format(dict0_fn,
+                          "Data dictionary: {}. \n").format(dict0_fn.replace(".csv", ""),
+                                                            dict0_fn,
                                                             doc_over,
                                                             col_longnames,
                                                             data_dict)
@@ -154,39 +155,46 @@ class IpedsCsvIngester:
             ipedsid_to_name_map = {k: v for k, v in zip(self.df_ccc["IPEDSID"],
                                                         self.df_ccc["NAME"])}
             if "UNITID" in dict0[dict0_fn]["data"].columns:
-                dict0[dict0_fn]["data"]["College Name"] = dict0[dict0_fn]["data"]["UNITID"].map(ipedsid_to_name_map)
+                dict0[dict0_fn]["data"]["college_name"] = dict0[dict0_fn]["data"]["UNITID"].map(ipedsid_to_name_map)
 
-            ## Step 2.7: Replace non-alphanumeric values with null
-            for col in dict0[dict0_fn]["data"].columns:
+            # ## Step 2.7: Replace non-alphanumeric values with null
+            # for col in dict0[dict0_fn]["data"].columns:
+            #
+            #     # Replace blank strings and one-character non-alphnum values with null
+            #     dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].apply(self.remove_non_alphanumeric)
+            #
+            #     # Convert all numerics to float for consistency
+            #     if dict0[dict0_fn]["data"][col].dtype not in [np.int64, np.float64]:
+            #
+            #         # Only convert if all cell values are numbers
+            #         if dict0[dict0_fn]["data"][col].str.isnumeric().sum() == dict0[dict0_fn]["data"][col].count():
+            #             dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].astype("float64")
+            #
+            #     else:
+            #
+            #         dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].astype("float64")
+            #
+            # ## Step 2.8: Replace shorthand column names with long names
+            # column_map = {k: v.strip() for k, v in zip(dict1[dict1_fn][vl_key]["varname"],
+            #                                            dict1[dict1_fn][vl_key]["varTitle"])}
+            # ###################
+            # print(len(column_map))
+            #
+            # column_map["College Name"] = "College Name"
+            # dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"].rename(columns=column_map)
+            #
+            # ## Step 2.9: Remove columns that were not in the map and for which we don't have long names
+            # columns_keep = dict0[dict0_fn]["data"].columns.tolist()
+            # ln_cols = [c.strip() for c in column_map.values() if c in columns_keep]
+            # dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"][ln_cols]
 
-                # Replace blank strings and one-character non-alphnum values with null
-                dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].apply(self.remove_non_alphanumeric)
+            ## Step 2.8: Lowercase column names
+            # column_map = {k: k.lower() for k in dict0[dict0_fn]["data"].columns}
+            # dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"].rename(columns=column_map)
 
-                # Convert all numerics to float for consistency
-                if dict0[dict0_fn]["data"][col].dtype not in [np.int64, np.float64]:
-
-                    # Only convert if all cell values are numbers
-                    if dict0[dict0_fn]["data"][col].str.isnumeric().sum() == dict0[dict0_fn]["data"][col].count():
-                        dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].astype("float64")
-
-                else:
-
-                    dict0[dict0_fn]["data"][col] = dict0[dict0_fn]["data"][col].astype("float64")
-
-
-            ## Step 2.8: Replace shorthand column names with long names
-            column_map = {k: v.strip() for k, v in zip(dict1[dict1_fn][vl_key]["varname"],
-                                                       dict1[dict1_fn][vl_key]["varTitle"])}
-            column_map["College Name"] = "College Name"
-            dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"].rename(columns=column_map)
-
-            ## Step 2.9: Remove columns that were not in the map and for which we don't have long names
-            columns_keep = dict0[dict0_fn]["data"].columns.tolist()
-            ln_cols = [c.strip() for c in column_map.values() if c in columns_keep]
-            dict0[dict0_fn]["data"] = dict0[dict0_fn]["data"][ln_cols]
-
-            ## Step 3.0: Create a filter data for only CA CC
-            mask = dict0[dict0_fn]["data"][column_map["UNITID"]].isin(self.ccc_ids)
+            ## Step 2.9: Create a filter data for only CA CC
+            # mask = dict0[dict0_fn]["data"][column_map["UNITID"]].isin(self.ccc_ids)
+            mask = dict0[dict0_fn]["data"]["UNITID"].isin(self.ccc_ids)
 
             # Step 3.1: Add the list of tuples of dictionaries
             if len(dict0[dict0_fn]["data"][mask]) < 1:
@@ -198,7 +206,6 @@ class IpedsCsvIngester:
 
                 ## Step 3.2: Add these to the list of tuples of dictionaries
                 self.df_tup_dicts.append((dict0[dict0_fn], dict1[dict1_fn], doc_descrs))
-
 
     def get_zip_file_type(self, filename: str):
         '''
@@ -219,7 +226,6 @@ class IpedsCsvIngester:
 
         else:
             return "dat"
-
 
     def get_files_to_read(self):
         '''
@@ -247,7 +253,10 @@ class IpedsCsvIngester:
         self.file_pairs = [(f, "{}_Dict.zip".format(os.path.splitext(f)[0])) for f in dat_files \
                            if "{}_Dict".format(os.path.splitext(f)[0]) in dict_files_roots]
 
-
+        ############################
+        # print(self.file_pairs)
+        # self.file_pairs = [('crawl_data/ipeds/zipcsv_files/SFA2223.zip', 'crawl_data/ipeds/zipcsv_files/SFA2223_Dict.zip')]
+        # print(self.file_pairs)
 
     def read_zip_file(self, data_path: str,
                       zip_file_name: str):
@@ -309,13 +318,14 @@ class IpedsCsvIngester:
 
     def create_descriptions_df(self):
         '''
-        Method to create a datframe containing csv file descriptions
+        Method to create a dataframe containing csv file descriptions
         '''
 
         # Create a dataframe descriptive files
         drows = []
         for ftpl in self.df_tup_dicts:
-            drows.append(dict(file_name=ftpl[2][20: ftpl[2].find(".csv") + 4],
+            fp = "Source CSV data file name: "
+            drows.append(dict(file_name=ftpl[2][ftpl[2].find(fp) + len(fp): ftpl[2].find(".csv") + 4],
                               file_type="csv",
                               num_cols=len(ftpl[0]["data"].columns),
                               cols=",".join(ftpl[0]["data"].columns.tolist()),
@@ -336,19 +346,45 @@ class IpedsCsvIngester:
         for ftpl in self.df_tup_dicts:
 
             # Set a file
+            fp = "Source CSV data file name: "
             res_filename = "prep_{}_{}".format(prep_dt,
-                                                 ftpl[2][20: ftpl[2].find(".csv") + 4])
+                                                 ftpl[2][ftpl[2].find(fp) + len(fp): ftpl[2].find(".csv") + 4])
 
-            # Save data in a CSV file
-            blob = self.gcs_bucket.blob(os.path.join("{}prep".format(self.input_data_path), res_filename))
-            blob.upload_from_string(ftpl[0]["data"].to_csv(), "text/csv")
+            # Save data in a CSV file on GCP
+            gct.write_pandas_as_csv_file_on_gcs(gcs_project_id=self.gcp_project_id,
+                                                df=ftpl[0]["data"],
+                                                gcs_bucket_name=self.gcs_bucket_name,
+                                                gcs_directory="{}prep".format(self.input_data_path),
+                                                file_name=res_filename)
+            # blob = self.gcs_bucket.blob(os.path.join("{}prep".format(self.input_data_path), res_filename))
+            # blob.upload_from_string(ftpl[0]["data"].to_csv(), "text/csv")
+
+
 
         # Save the descriptions data frame
         desc_filename = "descriptions_{}.csv".format(prep_dt)
 
-        # Save data in a CSV file
-        blob = self.gcs_bucket.blob(os.path.join("{}prep".format(self.input_data_path), desc_filename))
-        blob.upload_from_string(self.df_descs.to_csv(), "text/csv")
+        # # Save data in a CSV file
+        # blob = self.gcs_bucket.blob(os.path.join("{}prep".format(self.input_data_path), desc_filename))
+        # blob.upload_from_string(self.df_descs.to_csv(), "text/csv")
+
+        # Save descriptions dataframe in a CSV file on GCP
+        gct.write_pandas_as_csv_file_on_gcs(gcs_project_id=self.gcp_project_id,
+                                            df=self.df_descs,
+                                            gcs_bucket_name=self.gcs_bucket_name,
+                                            gcs_directory="{}prep".format(self.input_data_path),
+                                            file_name=desc_filename)
+
+        # Save the descriptions field as text file on GCP
+        desc_txt_filename = "ipeds_tables_descriptions_{}.txt".format(prep_dt)
+
+        # Save descriptions dataframe in a CSV file on GCP
+        descrps_content = "\n\n\n\n".join(self.df_descs["description"].tolist())
+        gct.save_file_to_bucket(gcs_project_id=self.gcp_project_id,
+                                gcs_bucket_name=self.gcs_bucket_name,
+                                gcs_directory="{}prep".format(self.input_data_path),
+                                file_name=desc_txt_filename,
+                                content=descrps_content)
 
     def remove_non_alphanumeric(self, cell_value):
         '''
@@ -357,7 +393,6 @@ class IpedsCsvIngester:
         :return:
 
         '''
-
 
         s_cell_value = str(cell_value)
 
