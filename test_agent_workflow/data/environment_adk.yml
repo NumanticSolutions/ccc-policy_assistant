@@ -1,0 +1,23 @@
+name: google-adk
+
+channels:
+  - apple
+  - conda-forge
+
+dependencies:
+  - python 3.11.12
+  - pip
+  - ipykernel
+  - jupyterlab
+
+  - pip:
+      - google-adk
+      - litellm
+      - google-cloud-aiplatform[agent_engines,adk]==1.88.0
+      - google-adk[extensions]
+      - pandas
+      - numpy
+      - pandas-gbq
+      - python-dotenv
+
+prefix: /Users/stephengodfrey/anaconda3
