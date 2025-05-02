@@ -8,7 +8,7 @@ This an experimental chatbot employing Artificial Intelligence tools to help use
 
 By making this tool available, we hope to demonstrate how policy advocacy can be supported through the use of technology. If you want to learn more or have thoughts about this application or similar tools or the underlying technology, please reach out.
 
-Apr 14, 2025
+May 1, 2025
 
 ## Contact
 

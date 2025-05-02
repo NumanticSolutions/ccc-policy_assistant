@@ -21,6 +21,10 @@ import asyncio
 import web_scraper as ws
 import webfile_downloader as wfd
 
+utils_path = "../../interface/utils"
+sys.path.insert(0, utils_path)
+from authentication import ApiAuthentication
+import gcp_tools as gct
 
 class webCrawler():
     '''
@@ -42,7 +46,7 @@ class webCrawler():
         self.dtformat = "%Y-%m-%d %H:%M:%S"
 
         # Sleep time between crawls (secs)
-        self.wait_time = 1
+        self.wait_time = 2
 
         # Save threshold - crawler will save results in batches of this size
         self.save_threshold = 100
@@ -59,7 +63,7 @@ class webCrawler():
         # Path to crawl results data local storage
         self.results_path = ""
         self.gcp_project_id = "eternal-bongo-435614-b9"
-        self.gcs_bucket_name = "ccc-crawl_data"
+        self.gcs_bucket_name = "ccc-crawl_data_xb"
         self.gcs_directory = ""
 
         # Output filename base - if this is blank, the crawler will assign a name
@@ -81,6 +85,11 @@ class webCrawler():
 
         # Update any key word args
         self.__dict__.update(kwargs)
+
+        # Authenticate by setting environment variables
+        dotenv_path = "../../data/environment"
+        api_configs = ApiAuthentication(dotenv_path=dotenv_path)
+        api_configs.set_environ_variables()
 
         # Set GCS class variables
         self.storage_client = storage.Client(project=self.gcp_project_id)
@@ -211,12 +220,14 @@ class webCrawler():
                     else:
                         self.crawl_cnt += 1
                         # print("Crawl No: {}; URl {}".format(crawl_cnt, r_url))
-                        crawl = await ws.webScraper.visit_page(url=r_url)
+                        crawl = ws.webScraper()
+                        crawl.visit_page(url=r_url)
+
                         # Pause
                         time.sleep(self.wait_time)
 
                         ## Step 2.10: Add these crawl results to the list of dictionaries; if data return
-                        if len(crawl.crawl_results) > 0:
+                        if len(crawl.result) > 0:
 
                             # Add to count of found crawl results
                             self.crawl_results_cnt += 1
@@ -224,17 +235,17 @@ class webCrawler():
                             ## Add these crawl results
                             all_sites_results.append(dict(seed_url=self.seed_url,
                                                           page_url=r_url,
-                                                          site_name=crawl.crawl_results["site_name"],
-                                                          page_title=crawl.crawl_results["page_title"],
-                                                          html_code_string=crawl.crawl_results["html_code_string"],
-                                                          ptag_text=crawl.crawl_results["ptag_text"],
-                                                          atag_urls=crawl.crawl_results["atag_urls"],
+                                                          site_name=crawl.result["site_name"],
+                                                          page_title=crawl.result["page_title"],
+                                                          html_code_string=crawl.result["html_code_string"],
+                                                          ptag_text=crawl.result["ptag_text"],
+                                                          atag_urls=crawl.result["atag_urls"],
                                                           content_type="web_page",
                                                           crawl_time=datetime.now().strftime(self.dtformat)
                                                           ))
 
                             ## Step 2.11: Add found URLs to the found URLs list
-                            found_urls.extend(crawl.crawl_results["atag_urls"])
+                            found_urls.extend(crawl.result["atag_urls"])
 
                     ## Step 2.12: Check if results should be saved
                     if self.crawl_results_cnt % self.save_threshold == 0:
@@ -305,9 +316,16 @@ class webCrawler():
             # Create a dataframe
             df = pd.DataFrame(data=all_sites_results)
 
+            # Save descriptions dataframe in a CSV file on GCP
+            gct.write_pandas_as_csv_file_on_gcs(gcs_project_id=self.gcp_project_id,
+                                                df=df,
+                                                gcs_bucket_name=self.gcs_bucket_name,
+                                                gcs_directory="{}/webpages_pdfs".format(self.gcs_directory),
+                                                file_name=res_filename)
+
             # Save data in a CSV file
-            blob = self.gcs_bucket.blob(os.path.join("{}/webpages_pdfs".format(self.gcs_directory), res_filename))
-            blob.upload_from_string(df.to_csv(), 'text/csv')
+            # blob = self.gcs_bucket.blob(os.path.join("{}/webpages_pdfs".format(self.gcs_directory), res_filename))
+            # blob.upload_from_string(df.to_csv(), 'text/csv')
             # df.to_csv(path_or_buf=os.path.join(self.results_path, res_filename))
 
             ## Update User

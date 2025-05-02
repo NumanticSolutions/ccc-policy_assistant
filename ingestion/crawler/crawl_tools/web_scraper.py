@@ -6,6 +6,7 @@
 # Built using Pyppeteer
 
 from pyppeteer import launch
+import requests
 from bs4 import BeautifulSoup
 # import html2text
 import urllib
@@ -22,119 +23,112 @@ class webScraper:
         turl = "https://en.wikipedia.org/wiki/Chaffey_College"
         test = await wc.webScraper.visit_page(url=turl)
 
-        test.crawl_results.keys()
+        test.result.keys()
         dict_keys(['url', 'html_code_string', 'soup', 'soup_text', 'h2t_text', 'page_urls'])
 
     params:
 
     '''
 
-    def __init__(self, crawl_results):
+    def __init__(self, **kwargs):
         '''
         Initialize class
         '''
 
-        self.crawl_results = crawl_results
+        # Scraper parameters
+        self.user_agent = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36")
+        self.headers = {"User-Agent": self.user_agent}
+        self. min_html_length = 100
+        self.timeout = 10
 
-        # # Update any key word args
-        # self.__dict__.update(kwargs)
+        # Update any key word args
+        self.__dict__.update(kwargs)
 
-    @classmethod
-    async def visit_page(cls, url):
+    def visit_page(self, url):
         '''
-        Use Pyppeteeer to visit page and then return results in a dict
+        Use Requests to visit page and then return results in a dict
         :return:
         '''
 
-        min_html_length = 100
+        ## Step 0.5: Set the result to empty
+        self.result = {}
 
-        # Get HTML code from webpage
-        html = await cls.collect_page_data(url=url)
-
-        if len(html) < min_html_length:
-            # Step 8: Create a class instance and return it
-            instance = cls(crawl_results={})
-            return instance
-
-        else:
-
-            ## Step 2: Load HTML Response Into BeautifulSoup
-            soup = BeautifulSoup(html, "html.parser")
-
-            ## Step 3: Get the HTML code in a string
-            html_code_string = str(soup)
-
-            ## Step 3b: Get meta data
-            page_title = ""
-            site_name = ""
-            for tag in soup.find_all("meta"):
-                if tag.get("property", "") == "og:title":
-                    page_title = tag.get("content", "")
-                elif tag.get("property", "") == "og:site_name":
-                    site_name = tag.get("content", "")
-
-            ## Step 4: Get text from p tags
-            ptag_texts = []
-            for p in soup.find_all('p'):
-                ptag_texts.append(p.text)
-
-            ## Step 4b: Create a single clean text column
-            ptag_text = cls.clean_ptag_texts(ptag_texts=ptag_texts)
-
-            ## Step 5: Get the BeautifulSoup text
-            # page_text = cls.clean_ptag_texts(ptag_texts=[soup.get_text()])
-
-            # ## Step 6: Get the HTML2Text text
-            # h = html2text.HTML2Text()
-            # # Ignore converting links from HTML
-            # h.ignore_links = True
-            # h.body_width = 0
-            # h2t_text = h.handle(html_code_string)
-
-            ## Step 6: Return all links in <a tags with href values
-            atag_urls = []
-            for a in soup.find_all('a', href=True):
-                atag_urls.append(a['href'])
-
-            # Append the base url to href URLS to make them navigable - remove redundant URLs in the process
-            atag_urls = [cls.get_full_url(purl=url, hurl=u) for u in atag_urls]
-            atag_urls = set(atag_urls)
-
-            # Step 7: Save results to a dictionary
-            result = dict(url=url,
-                          site_name=site_name,
-                          page_title=page_title,
-                          html_code_string=html_code_string,
-                          soup=soup,
-                          ptag_text=ptag_text,
-                          atag_urls=atag_urls)
-
-            # Step 8: Create a class instance and return it
-            instance = cls(crawl_results=result)
-            return instance
-
-    @staticmethod
-    async def collect_page_data(url):
-        '''
-        Asynch function to get page content
-        :return:
-        '''
+        # Step 1: Fetch URL data
+        response = requests.get(url=url,
+                                headers=self.headers,
+                                timeout=self.timeout)
+        self.status_code = response.status_code
+        self.content = response.content
 
         try:
-            browser = await launch()
-            page = await browser.newPage()
-            await page.goto(url=url)
+            response = requests.get(url=url,
+                                headers=self.headers,
+                                timeout=self.timeout)
+            self.status_code = response.status_code
+            self.content = response.content
 
-            ## Step 1: Get page content from Pyppeter
-            html = await page.content()
-            await browser.close()
+            # URL data was returned
+            if response.status_code == 200 and len(response.text) >= self.min_html_length:
 
-        except:
-            return {}
+                ## Step 2: Load HTML Response Into BeautifulSoup
+                soup = BeautifulSoup(response.text, "html.parser")
 
-        return html
+                ## Step 3: Get the HTML code in a string
+                html_code_string = str(soup)
 
-    @classmethod
+                ## Step 3b: Get meta data
+                page_title = ""
+                site_name = ""
+                for tag in soup.find_all("meta"):
+                    if tag.get("property", "") == "og:title":
+                        page_title = tag.get("content", "")
+                    elif tag.get("property", "") == "og:site_name":
+                        site_name = tag.get("content", "")
+
+                ## Step 4: Get text from p tags
+                ptag_texts = []
+                for p in soup.find_all('p'):
+                    ptag_texts.append(p.text)
+
+                ## Step 4b: Create a single clean text column
+                ptag_text = self.clean_ptag_texts(ptag_texts=ptag_texts)
+
+                ## Step 5: Get the BeautifulSoup text
+                # page_text = cls.clean_ptag_texts(ptag_texts=[soup.get_text()])
+
+                # ## Step 6: Get the HTML2Text text
+                # h = html2text.HTML2Text()
+                # # Ignore converting links from HTML
+                # h.ignore_links = True
+                # h.body_width = 0
+                # h2t_text = h.handle(html_code_string)
+
+                ## Step 6: Return all links in <a tags with href values
+                atag_urls = []
+                for a in soup.find_all('a', href=True):
+                    atag_urls.append(a['href'])
+
+                # Append the base url to href URLS to make them navigable - remove redundant URLs in the process
+                atag_urls = [self.get_full_url(purl=url, hurl=u) for u in atag_urls]
+                atag_urls = set(atag_urls)
+
+                # Step 7: Save results to a dictionary
+                self.result = dict(url=url,
+                                   site_name=site_name,
+                                   page_title=page_title,
+                                   html_code_string=html_code_string,
+                                   soup=soup,
+                                   ptag_text=ptag_text,
+                                   atag_urls=atag_urls)
+
+        except requests.exceptions.Timeout:
+            print(f"Request timed out for URL: {url}")
+
+
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to fetch URL: {url} with error: {e}")
+
     def get_full_url(self,
                      purl,
                      hurl):
@@ -162,7 +156,6 @@ class webScraper:
             # Join root and href URL
             return urllib.parse.urljoin(root_url, hurl)
 
-    @classmethod
     def clean_ptag_texts(self, ptag_texts: list):
         '''
         Method to clean the ptag text. This method takes a list of ptag texts and
@@ -170,12 +163,12 @@ class webScraper:
         '''
 
         # remove unwanted characters
-        pat = r"\n|\xa0"
-        # pat = r"\n"
+        pats = [r"\n|\xa0", r"\s+", r"\[\d+]", r"\s{2,}"]
 
         ptag_text = " ".join(ptag_texts)
-        ptag_text = re.sub(pat, " ", ptag_text)
-        pat = "\\s+"
-        ptag_text = re.sub(pat, " ", ptag_text)
+        for pat in pats:
+            ptag_text = re.sub(pat, " ", ptag_text)
+
+        ptag_text = ptag_text.strip()
 
         return ptag_text

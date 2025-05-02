@@ -154,18 +154,19 @@ class webFileDownloader:
             except:
                 return -1
 
-    def clean_text(self, text):
+    def clean_ptag_texts(self, ptag_texts: list):
         '''
         Method to clean the ptag text. This method takes a list of ptag texts and
         returns a single string of cleaned ptag texts joined together.
         '''
 
         # remove unwanted characters
-        pat = r"\n|\xa0"
-        # pat = r"\n"
+        pats = [r"\n|\xa0", r"\s+", r"\[\d+]", r"\s{2,}"]
 
-        text = re.sub(pat, " ", text)
-        pat = "\\s+"
-        text = re.sub(pat, " ", text)
+        ptag_text = " ".join(ptag_texts)
+        for pat in pats:
+            ptag_text = re.sub(pat, " ", ptag_text)
 
-        return text
+        ptag_text = ptag_text.strip()
+
+        return ptag_text
