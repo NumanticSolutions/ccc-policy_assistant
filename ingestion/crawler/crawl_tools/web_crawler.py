@@ -46,7 +46,7 @@ class webCrawler():
         self.dtformat = "%Y-%m-%d %H:%M:%S"
 
         # Sleep time between crawls (secs)
-        self.wait_time = 2
+        self.wait_time = 1
 
         # Save threshold - crawler will save results in batches of this size
         self.save_threshold = 100
@@ -64,7 +64,7 @@ class webCrawler():
         self.results_path = ""
         self.gcp_project_id = "eternal-bongo-435614-b9"
         self.gcs_bucket_name = "ccc-crawl_data_xb"
-        self.gcs_directory = ""
+        self.gcs_directory = "crawl_data"
 
         # Output filename base - if this is blank, the crawler will assign a name
         self.output_filename_base = ""
@@ -315,6 +315,8 @@ class webCrawler():
 
             # Create a dataframe
             df = pd.DataFrame(data=all_sites_results)
+            print("dave directory")
+            print("{}/webpages_pdfs".format(self.gcs_directory))
 
             # Save descriptions dataframe in a CSV file on GCP
             gct.write_pandas_as_csv_file_on_gcs(gcs_project_id=self.gcp_project_id,
@@ -324,8 +326,6 @@ class webCrawler():
                                                 file_name=res_filename)
 
             # Save data in a CSV file
-            # blob = self.gcs_bucket.blob(os.path.join("{}/webpages_pdfs".format(self.gcs_directory), res_filename))
-            # blob.upload_from_string(df.to_csv(), 'text/csv')
             # df.to_csv(path_or_buf=os.path.join(self.results_path, res_filename))
 
             ## Update User

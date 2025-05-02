@@ -55,16 +55,12 @@ class webScraper:
         self.result = {}
 
         # Step 1: Fetch URL data
-        response = requests.get(url=url,
-                                headers=self.headers,
-                                timeout=self.timeout)
-        self.status_code = response.status_code
-        self.content = response.content
-
         try:
             response = requests.get(url=url,
-                                headers=self.headers,
-                                timeout=self.timeout)
+                                    headers=self.headers,
+                                    timeout=self.timeout,
+                                    verify=False
+                                    )
             self.status_code = response.status_code
             self.content = response.content
 
