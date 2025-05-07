@@ -17,20 +17,20 @@ from vertexai import rag
 import vertexai
 
 # Need 2 paths here to handle the case of running the agent from the root directory using adk run rag
-utils_path = "../../../../../ccc-policy_assistant/interface/utils"
+utils_path = "../../ccc-policy_assistant/interface/utils"
 sys.path.insert(0, utils_path)
 
-utils_path = "../../../../ccc-policy_assistant/interface/utils"
+utils_path = "../ccc-policy_assistant/interface/utils"
 sys.path.insert(0, utils_path)
 
 from authentication import ApiAuthentication
 
 # Set environment variables
 try:
-    dotenv_path = "../../../../../ccc-policy_assistant/data/environment"
+    dotenv_path = "../../data/environment"
     api_configs = ApiAuthentication(dotenv_path=dotenv_path)
 except:
-    dotenv_path = "../../../../ccc-policy_assistant/data/environment"
+    dotenv_path = "../data/environment"
     api_configs = ApiAuthentication(dotenv_path=dotenv_path)
 
 api_configs.set_environ_variables()
