@@ -159,7 +159,7 @@ class webScraper:
         '''
 
         # remove unwanted characters
-        pats = [r"\n|\xa0", r"\s+", r"\[\d+]", r"\s{2,}"]
+        pats = [r"\n|\xa0", r"\s+", r"\[\d+]",  r"\[…]", r"\s{2,}"]
 
         ptag_text = " ".join(ptag_texts)
         for pat in pats:
