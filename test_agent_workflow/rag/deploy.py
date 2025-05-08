@@ -6,12 +6,12 @@ from vertexai import agent_engines
 
 from vertexai.preview.reasoning_engines import AdkApp
 
-utils_path = "../../../../../ccc-policy_assistant/interface/utils"
+utils_path = "../../interface/utils"
 sys.path.insert(0, utils_path)
 from authentication import ApiAuthentication
 
 # Set environment variables
-dotenv_path = "../../../../../ccc-policy_assistant/data/environment"
+dotenv_path = "../../data/environment"
 api_configs = ApiAuthentication(dotenv_path=dotenv_path)
 api_configs.set_environ_variables()
 
