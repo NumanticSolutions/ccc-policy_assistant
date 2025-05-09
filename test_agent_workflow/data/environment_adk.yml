@@ -16,8 +16,11 @@ dependencies:
       - google-cloud-aiplatform[agent_engines,adk]==1.88.0
       - google-adk[extensions]
       - pandas
+      - scikit-learn
       - numpy
       - pandas-gbq
       - python-dotenv
+      - pytest
+      - pytest-reportlog
 
 prefix: /Users/stephengodfrey/anaconda3
