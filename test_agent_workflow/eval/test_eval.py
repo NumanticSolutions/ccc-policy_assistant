@@ -6,6 +6,8 @@ import pathlib
 
 import pytest
 
+
+
 utils_path = "../../interface/utils"
 sys.path.insert(0, utils_path)
 from authentication import ApiAuthentication
@@ -32,15 +34,26 @@ api_configs = ApiAuthentication(dotenv_path=dotenv_path)
 #         num_runs=1
 #     )
 
-@pytest.fixture(scope='session', autouse=True)
-def load_env():
-    # dotenv.load_dotenv()
-    api_configs.set_environ_variables()
+# @pytest.fixture(scope='session', autouse=True)
+# def load_env():
+#     # dotenv.load_dotenv()
+#     api_configs.set_environ_variables()
+#
+# def test_with_single_test_file():
+#     """Test the agent's basic ability via a session file."""
+#     AgentEvaluator.evaluate(
+#         agent_module="rag",
+#         eval_dataset_file_path_or_dir=str(pathlib.Path(__file__).parent / "data/ccc_test.test.json"),
+#         num_runs=1
+#     )
 
-def test_with_single_test_file():
-    """Test the agent's basic ability via a session file."""
-    AgentEvaluator.evaluate(
-        agent_module="rag",
-        eval_dataset_file_path_or_dir=str(pathlib.Path(__file__).parent / "data/ccc_test.test.json"),
-        num_runs=1
-    )
+
+from google.adk.evaluation import run_test_file
+
+
+
+def test_agent():
+    result = run_test_file(agent_factory=lambda: root_agent,
+                           test_file_path="path/to/test_file.json"
+                           )
+    assert result.passed

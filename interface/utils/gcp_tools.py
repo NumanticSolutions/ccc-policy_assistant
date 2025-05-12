@@ -103,6 +103,28 @@ def read_gcs_file(gcp_project_id, gcs_bucket_name, path, filename):
 
     return io.BytesIO(blob.download_as_string())
 
+def read_gcs_text_file(gcp_project_id, gcs_bucket_name, path, filename):
+    '''
+    Function to read a GCP Cloud Storage file
+    '''
+
+    # Create a storage client
+    storage_client = storage.Client(project=gcp_project_id)
+
+    # Get the bucket
+    bucket = storage_client.bucket(gcs_bucket_name)
+
+    # Create a path to the file
+    file_blob_path = os.path.join(path, filename)
+    blob = bucket.blob(file_blob_path)
+
+    with blob.open("r") as f:
+        return f.read()
+    #
+    # return io.BytesIO(blob.download_as_string())
+
+
+
 def upload_directory_to_gcs(local_directory, gcs_project_id,
                             gcs_bucket_name, gcs_directory):
     '''
