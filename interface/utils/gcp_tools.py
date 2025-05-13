@@ -446,3 +446,12 @@ def list_bigquery_tables(project_id,
 
     return table_names
 
+def read_bigquery_to_pandas(query_or_table,
+                            project_id):
+    '''
+    Method to read data from Bigquery tables into a pandas dataframe
+    '''
+
+    return  pbq.read_gbq(query_or_table=query_or_table,
+                         project_id=project_id)
+
