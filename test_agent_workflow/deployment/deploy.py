@@ -5,20 +5,32 @@ import vertexai
 from vertexai import agent_engines
 from vertexai.preview.reasoning_engines import AdkApp
 
-# Set environment variables including authentication and GCP parameters
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils.authentication import ApiAuthentication
-dotenv_path = "../../data/environment"
+# Import asn authentication object
+utils_path =  os.path.abspath(os.path.join(os.path.dirname(__file__), '../../test_agent_workflow/utils'))
+sys.path.insert(0, utils_path)
+from authentication import ApiAuthentication
+import os_tools as ot
+
+# Set environment variables
+dotenv_path =  os.path.abspath(os.path.join(os.path.dirname(__file__), '../../data/environment'))
+sys.path.insert(0, dotenv_path)
 api_configs = ApiAuthentication(dotenv_path=dotenv_path)
+
+# Copy agent files into the deployment directory
+chatbot_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../ccc_chatbot'))
+source_directory = chatbot_path
+destination_directory = "./ccc_chatbot"
+ot.copy_and_replace_recursive(source_directory, destination_directory)
+
+# Import the chatbot
+from ccc_chatbot.agent import root_agent
+
 
 # Initialize Vertex AI API once per session
 vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
               location=os.environ["GOOGLE_CLOUD_LOCATION"],
               staging_bucket=os.environ["STAGING_BUCKET"])
 
-# utils_path = "rag"
-# sys.path.insert(0, utils_path)
-from ccc_chatbot.agent import root_agent
 
 def deploy() -> None:
     '''
@@ -34,7 +46,7 @@ def deploy() -> None:
         app,
         requirements=[
             "google-cloud-aiplatform[agent_engines,adk]==1.88.0",
-            "google-adk",
+            "google-adk==0.5.0",
             "google-adk[extensions]",
             "litellm",
             "python-dotenv",
@@ -43,9 +55,11 @@ def deploy() -> None:
             "requests",
         ],
         extra_packages=[
-            ".ccc_chatbot",
+            "ccc_chatbot",
         ],
     )
+
+
 
     # log remote_app
     print(f"Deployed rag to Vertex AI Agent Engine successfully, resource name: {remote_app.resource_name}")
