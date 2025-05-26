@@ -1,30 +1,35 @@
 # © 2025 Numantic Solutions LLC
 # MIT License
 #
+
 #
 # * A retrieval-centric interface for CCC-PA
 #
 
-
+import sys, os
 import streamlit as st
 
-# import json
-import sys, os
-# import re
-# import datetime
+import vertexai
+from vertexai import agent_engines
 
+# IMport authentication object
+utils_path = "../utils"
+sys.path.insert(0, utils_path)
+from authentication import ApiAuthentication
 
-# import gcp_tools as gct
-# import authentication as auth
+# Set environment variables
+dotenv_path = "../../data/environment"
+api_configs = ApiAuthentication(dotenv_path=dotenv_path)
+api_configs.set_environ_variables()
 
-# import rag_bot_1 as rb1
-sys.path.insert(0, "rag")
-sys.path.insert(0, "utils")
-from rag_bot import CCCPolicyAssistant
+# Initialize Vertex AI API once per session
+vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
+              location=os.environ["GOOGLE_CLOUD_LOCATION"],
+              staging_bucket=os.environ["STAGING_BUCKET"])
 
-st.set_page_config(page_title="CCC-PA")
 
 ########## Set up Streamlit
+st.set_page_config(page_title="CCC-PA")
 font_url = ("https://fonts.googleapis.com/css2?family=Lato:ital,wght"
             "@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap")
 streamlit_style = """
@@ -65,10 +70,10 @@ if "bot" not in st.session_state:
     #                                              chat_bot_verbose=False,
     #                                              dot_env_path = "../data/environment")
 
-    # # For use when API keys are in GCP secrets
-    st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name="crawl_docs-vai-2",
-                                                 chat_bot_verbose=False,
-                                                 dot_env_path="")
+    st.session_state["bot"] = agent_engines.get(os.getenv("AGENT_ENGINE_ID2"))
+
+
+
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -118,15 +123,14 @@ with st.sidebar:
         st.markdown(links)
 
         st.text("\n")
-        version_msg = ("Version : " + st.session_state["bot"].version)
+        ### ??? st.session_state["bot"].version
+        version_msg = ("Version : " + "ADK May 26, 2025")
         st.markdown(version_msg)
 
-
-
 # displays the chat history when app is rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# for message in st.session_state.messages:
+#     with st.chat_message(message["role"]):
+#         st.markdown(message["content"])
 
 # Reset button
 columns = st.columns(4)
@@ -145,30 +149,27 @@ if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     # Get the AI assistant's response
-    st.session_state["bot"].show_conversation(input_message=user_input)
+    # ????????????????????
+    # st.session_state["bot"].show_conversation(input_message=user_input)
 
-    # Get retrieved urls
-    retrieved_urls = ["- [{}]({})\n".format(up[0], up[1]) for up in st.session_state["bot"].retrieved_urls]
-    retrieved_urls = list(set(retrieved_urls))
+    # Create a session
+    user_id = "u_123"
+    st.session_state["session"]  = st.session_state["bot"].create_session(user_id=user_id)
 
-    # Create a single string of retrieved URLs
-    res_phrase = ""
-    if len(retrieved_urls) > 0:
-        res_phrase = "\n\nThese references might be useful: \n{}".format(" ".join(retrieved_urls))
+    agent_response = st.session_state["bot"].stream_query(message=user_input,
+                                                          user_id=user_id)
 
-    # Combine into a single response
-    ai_response = "{} {}".format(st.session_state["bot"].ai_response, res_phrase)
+    for event in agent_response:
+        if event["author"] == "synthesis_agent":
+            for entry in event["content"]["parts"]:
+                ai_response = entry["text"]
+                st.session_state.messages.append({"role": "assistant", "content": ai_response})
 
-    # Add query result response
-    if len(st.session_state["bot"].query_data_result) > 0:
-        ai_response = "{}\n{}".format(ai_response, st.session_state["bot"].query_data_result)
+                # Display assistant's message
+                st.markdown(ai_response)
+                # with st.chat_message("assistant"):
+                #     st.markdown(ai_response)
 
-    # Store AI's response in the chat history
-    st.session_state.messages.append({"role": "assistant", "content": ai_response})
-
-    # Display assistant's message
-    with st.chat_message("assistant"):
-        st.markdown(ai_response)
 
 # Option to clear chat history
 # if st.button("Clear Chat"):
