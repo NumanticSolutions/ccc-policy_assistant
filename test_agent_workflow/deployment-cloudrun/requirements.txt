@@ -1,0 +1,8 @@
+google-cloud-aiplatform[agent_engines,adk]==1.88.0
+google-adk==0.5.0
+google-adk[extensions]
+litellm
+python-dotenv
+google-auth
+tqdm
+requests

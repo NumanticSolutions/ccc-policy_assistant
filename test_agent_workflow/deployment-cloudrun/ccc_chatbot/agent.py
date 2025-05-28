@@ -16,9 +16,11 @@ from google.adk.agents import SequentialAgent
 
 
 from . import prompt
+
 from .sub_agents import rag_agent
 from .sub_agents import search_agent
 from .sub_agents import synthesis_agent
+
 
 code_pipeline_agent = SequentialAgent(
     name=prompt.chatbot_agent_name,

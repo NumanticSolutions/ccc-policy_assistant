@@ -5,7 +5,7 @@ import vertexai
 from vertexai import agent_engines
 from vertexai.preview.reasoning_engines import AdkApp
 
-# Import asn authentication object
+# Import an authentication object
 utils_path =  os.path.abspath(os.path.join(os.path.dirname(__file__), '../../test_agent_workflow/utils'))
 sys.path.insert(0, utils_path)
 from authentication import ApiAuthentication
