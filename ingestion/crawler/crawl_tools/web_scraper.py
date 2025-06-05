@@ -1,11 +1,8 @@
 # © 2025 Numantic Solutions LLC
 # MIT License
 #
-
 # Class for scraping websites
-# Built using Pyppeteer
 
-from pyppeteer import launch
 import requests
 from bs4 import BeautifulSoup
 # import html2text
@@ -87,8 +84,16 @@ class webScraper:
                 for p in soup.find_all('p'):
                     ptag_texts.append(p.text)
 
-                ## Step 4b: Create a single clean text column
+                ## Step 4a: Create a single clean text column
                 ptag_text = self.clean_ptag_texts(ptag_texts=ptag_texts)
+
+                ## Step 4b. Get the text from tags
+                divtag_texts = []
+                for p in soup.find_all('div'):
+                    divtag_texts.append(p.text)
+
+                ## Step 4c: Create a single clean text column
+                divtag_text = self.clean_ptag_texts(ptag_texts=divtag_texts)
 
                 ## Step 5: Get the BeautifulSoup text
                 # page_text = cls.clean_ptag_texts(ptag_texts=[soup.get_text()])
@@ -116,6 +121,7 @@ class webScraper:
                                    html_code_string=html_code_string,
                                    soup=soup,
                                    ptag_text=ptag_text,
+                                   divtag_text=divtag_text,
                                    atag_urls=atag_urls)
 
         except requests.exceptions.Timeout:
@@ -159,7 +165,7 @@ class webScraper:
         '''
 
         # remove unwanted characters
-        pats = [r"\n|\xa0", r"\s+", r"\[\d+]",  r"\[…]", r"\s{2,}"]
+        pats = [r"\n|\xa0", r"\s+", r"\[\d+]",  r"\[…]", r"\s{2,}", r"\||>|/"]
 
         ptag_text = " ".join(ptag_texts)
         for pat in pats:

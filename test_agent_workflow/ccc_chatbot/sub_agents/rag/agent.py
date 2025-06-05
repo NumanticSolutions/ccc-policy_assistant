@@ -44,7 +44,7 @@ ask_vertex_retrieval = VertexAiRagRetrieval(
     description=prompt.rag_tool_description,
     rag_resources=[
         rag.RagResource(
-            rag_corpus=os.environ["RAG_CORPUS"]
+            rag_corpus=os.environ["RAG_CORPUS_2"]
         )
     ],
     similarity_top_k=3,

@@ -5,14 +5,14 @@ from google.adk.agents import SequentialAgent
 
 
 ###### Comment out when deploying
-# utils_path = "../interface/utils"
-# sys.path.insert(0, utils_path)
-# from authentication import ApiAuthentication
-#
-# # Set environment variables
-# dotenv_path = "../data/environment"
-# print(os.listdir(dotenv_path))
-# api_configs = ApiAuthentication(dotenv_path=dotenv_path)
+if "GOOGLE_CLOUD_PROJECT" not in os.environ:
+    utils_path = "../interface/utils"
+    sys.path.insert(0, utils_path)
+    from authentication import ApiAuthentication
+
+    # Set environment variables
+    dotenv_path = "../data/environment"
+    api_configs = ApiAuthentication(dotenv_path=dotenv_path)
 
 
 from . import prompt

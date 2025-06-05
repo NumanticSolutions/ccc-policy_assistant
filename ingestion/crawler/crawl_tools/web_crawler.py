@@ -315,7 +315,7 @@ class webCrawler():
 
             # Create a dataframe
             df = pd.DataFrame(data=all_sites_results)
-            print("dave directory")
+            print("save directory")
             print("{}/webpages_pdfs".format(self.gcs_directory))
 
             # Save descriptions dataframe in a CSV file on GCP
