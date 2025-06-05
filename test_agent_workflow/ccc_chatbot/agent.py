@@ -14,11 +14,17 @@ if "GOOGLE_CLOUD_PROJECT" not in os.environ:
     dotenv_path = "../data/environment"
     api_configs = ApiAuthentication(dotenv_path=dotenv_path)
 
+try:
+    from . import prompt
+    from .sub_agents import rag_agent
+    from .sub_agents import search_agent
+    from .sub_agents import synthesis_agent
+except:
+    import prompt
+    utils_path = "sub_agents/rag"
+    sys.path.insert(0, utils_path)
+    from agent import root_agent as rag_agent
 
-from . import prompt
-from .sub_agents import rag_agent
-from .sub_agents import search_agent
-from .sub_agents import synthesis_agent
 
 code_pipeline_agent = SequentialAgent(
     name=prompt.chatbot_agent_name,
