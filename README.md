@@ -3,6 +3,7 @@
 # $\textsf{\color{#f5750e}{f5750e}}$
 
 <h3 style="color:#ff0000">Danger</h3>
+<span color="red">red</span>
 
 ## Overview
 
