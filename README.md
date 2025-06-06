@@ -1,7 +1,16 @@
 <h1><img src="./data/images/Numantic Solutions_Logomark_orange.png" alt="NS" style="float:left;width:70px;height:40px;"> $${\color{#ed8428}California Community College Policy Assistant}$$ </h1>
 
-$\color{green}{test}$
+# $\textsf{\color{#f5750e}{Introduction}}$ 
 
+Some introduction text.
+
+### $\textsf{\color{#f48522}{Phase 1.}}$
+
+Some phase 1 text.
+
+#### $\textsf{\color{#326a95}{Section A.}}$  
+
+Some section a text.
 
 ## Overview
 
