@@ -1,11 +1,6 @@
-<h1><img src="./data/images/Numantic Solutions_Logomark_orange.png" alt="NS" style="float:left;width:70px;height:40px;"> $${\color{#ed8428}California Community College Policy Assistant}$$ </h1>
+<img src="./data/images/Numantic Solutions_Logomark_orange.png" alt="NS" style="float:left;width:70px;height:40px;">  <h1>Community College Policy Assistant</h1>
 
-# $\textsf{\color{#f5750e}{f5750e}}$
 
-<h3 style="color:#ff0000">Danger</h3>
-<span color="red">red</span>
-
-This sentence uses `$` delimiters to show math inline: $\sqrt{3x-1}+(1+x)^2$
 
 ## Overview
 
