@@ -2,7 +2,6 @@
 
 $\color{green}{test}$
 
-$${\color{#ed8428} {California Community College Policy Assistant}}$$
 
 ## Overview
 
