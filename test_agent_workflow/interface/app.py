@@ -9,8 +9,13 @@
 import sys, os
 import streamlit as st
 
+import asyncio
+
 import vertexai
 from vertexai import agent_engines
+
+from google.adk.memory import InMemoryMemoryService
+
 
 # IMport authentication object
 utils_path = "../utils"
@@ -70,7 +75,7 @@ if "bot" not in st.session_state:
     #                                              chat_bot_verbose=False,
     #                                              dot_env_path = "../data/environment")
 
-    st.session_state["bot"] = agent_engines.get(os.getenv("AGENT_ENGINE_ID2"))
+    st.session_state["bot"] = agent_engines.get(os.getenv("AGENT_ENGINE_ID"))
 
 
 
@@ -140,6 +145,23 @@ reset_button = columns[3].button("Clear Chat")
 # Input box for user's query
 user_input = st.chat_input("Your message")
 
+# memory_service = InMemoryMemoryService()
+#
+# async def update_memory_service(memory_service, session):
+#
+#     ############################################
+#     for key in session.keys():
+#         st.markdown(key)
+#         st.markdown(session[key])
+#     return await memory_service.add_session_to_memory(session)
+
+
+# Create a session
+user_id = "u_123"
+st.session_state["session"] = st.session_state["bot"].create_session(user_id=user_id)
+############################################
+# st.markdown(st.session_state["session"])
+
 if user_input:
     # Display user's message
     with st.chat_message("user"):
@@ -152,14 +174,20 @@ if user_input:
     # ????????????????????
     # st.session_state["bot"].show_conversation(input_message=user_input)
 
-    # Create a session
-    user_id = "u_123"
-    st.session_state["session"]  = st.session_state["bot"].create_session(user_id=user_id)
+
 
     agent_response = st.session_state["bot"].stream_query(message=user_input,
                                                           user_id=user_id)
 
     for event in agent_response:
+        if event["author"] == "intake_agent":
+            for entry in event["content"]["parts"]:
+                ai_response = entry["text"]
+                st.session_state.messages.append({"role": "assistant", "content": ai_response})
+
+            # Display assistant's message
+            st.markdown(ai_response)
+
         if event["author"] == "synthesis_agent":
             for entry in event["content"]["parts"]:
                 ai_response = entry["text"]
@@ -169,6 +197,11 @@ if user_input:
                 st.markdown(ai_response)
                 # with st.chat_message("assistant"):
                 #     st.markdown(ai_response)
+
+    ############################################
+    # st.markdown(st.session_state["session"])
+    # memory_service = asyncio.run(update_memory_service(memory_service, st.session_state["session"]))
+
 
 
 # Option to clear chat history

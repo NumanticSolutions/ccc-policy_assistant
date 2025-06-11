@@ -8,12 +8,12 @@
 
 
 # Import libraries
-import os, sys
+
 
 from google.adk.agents import Agent
 from google.adk.tools.retrieval.vertex_ai_rag_retrieval import VertexAiRagRetrieval
 from vertexai import rag
-import vertexai
+# import vertexai
 
 from . import prompt
 #
@@ -36,24 +36,24 @@ from . import prompt
 # api_configs.set_environ_variables()
 
 # Initialize Vertex AI API once per session
-vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
-              location=os.environ["GOOGLE_CLOUD_LOCATION"])
+# vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
+#               location=os.environ["GOOGLE_CLOUD_LOCATION"])
 
 ask_vertex_retrieval = VertexAiRagRetrieval(
     name=prompt.rag_tool_name,
     description=prompt.rag_tool_description,
     rag_resources=[
         rag.RagResource(
-            rag_corpus=os.environ["RAG_CORPUS"]
+            rag_corpus=prompt.rag_corpus_name
         )
     ],
-    similarity_top_k=3,
-    vector_distance_threshold=0.6,
+    similarity_top_k=10,
+    vector_distance_threshold=0.4,
 )
 
 root_agent = Agent(
-    model=os.environ["GEMINI_MODEL"],
     name=prompt.rag_agent_name,
+    model=prompt.rag_model_name,
     description=prompt.rag_agent_description,
     instruction=prompt.rag_agent_instruction,
     tools=[

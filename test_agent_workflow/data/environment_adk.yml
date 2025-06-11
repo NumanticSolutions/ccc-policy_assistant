@@ -11,17 +11,16 @@ dependencies:
   - jupyterlab
 
   - pip:
-      - google-adk==0.5.0
-      - litellm
-      - google-cloud-aiplatform[agent_engines,adk]==1.88.0
-      - google-adk[extensions]
+      - google-cloud-aiplatform[agent_engines,adk,langchain,ag2,llama_index,evaluation]>=1.88.0
+      - google-adk>=1.2.1
       - pandas
       - scikit-learn
       - numpy
       - pandas-gbq
       - python-dotenv
-      - pytest
-      - pytest-reportlog
+
       - streamlit
+
+
 
 prefix: /Users/stephengodfrey/anaconda3

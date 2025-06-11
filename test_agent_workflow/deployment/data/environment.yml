@@ -1,0 +1,60 @@
+name: ccc-polasst
+
+channels:
+  - apple
+  - conda-forge
+
+dependencies:
+  - python 3.9
+  - ipykernel
+  - jupyterlab
+  - pip
+
+  - pip:
+      - pandas
+      - openpyxl
+      - numpy
+      - pydantic
+      - jsonlines
+      - asyncio
+      - tqdm
+      - python-dotenv
+
+      - google-cloud-secret-manager
+      - google-cloud-storage
+      - google.auth
+      - google-cloud-bigquery
+      - vertexai
+      - google-genai
+      - google-adk
+
+      - openai
+
+      - pandas-gbq    
+
+      - streamlit
+
+      - scikit-learn
+      - scipy
+      - nltk
+      - matplotlib
+
+      - langchain
+      - langchain-community
+      - langchain-chroma
+      - langchain-openai
+      - langchain-google-vertexai
+      - langgraph
+      - langchain-experimental
+      - langsmith
+      - tabulate
+      - langchain-google-genai
+
+      - pypdf
+
+      - pyppeteer
+      - beautifulsoup4
+      - requests
+      - html2text
+
+prefix: /Users/stephengodfrey/anaconda3
