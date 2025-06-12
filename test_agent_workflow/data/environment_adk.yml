@@ -13,6 +13,7 @@ dependencies:
   - pip:
       - google-cloud-aiplatform[agent_engines,adk,langchain,ag2,llama_index,evaluation]>=1.88.0
       - google-adk>=1.2.1
+      - google-cloud-discoveryengine
       - pandas
       - scikit-learn
       - numpy

@@ -154,7 +154,7 @@ def upload_directory_to_gcs(local_directory, gcs_project_id,
 
             # Upload
             blob.upload_from_filename(local_file_path)
-            print(f"Uploaded {local_file_path} to gs://{gcs_bucket_name}/{gcs_directory}{relative_path}")
+            print(f"Uploaded {local_file_path} to gs://{gcs_bucket_name}/{gcs_directory}/{relative_path}")
 
 def download_directory_from_gcs(gcs_project_id, gcs_bucket_name,
                                 gcs_directory, local_directory):
