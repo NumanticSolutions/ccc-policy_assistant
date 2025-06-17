@@ -8,14 +8,12 @@
 
 
 # Import libraries
-
-
-
-
-from google.adk.agents import Agent
+from google.adk.agents import Agent, LlmAgent
 from google.adk.tools.retrieval.vertex_ai_rag_retrieval import VertexAiRagRetrieval
+from google.adk.tools import VertexAiSearchTool
 from vertexai import rag
-# import vertexai
+import vertexai
+from vertexai.preview.generative_models import Tool
 
 from . import prompt
 
@@ -44,29 +42,42 @@ from . import prompt
 #               location=os.environ["GOOGLE_CLOUD_LOCATION"])
 
 
+#################### RAG agent
+# ask_vertex_retrieval = VertexAiRagRetrieval(
+#     name=prompt.rag_tool_name,
+#     description=prompt.rag_tool_description,
+#     rag_resources=[
+#         rag.RagResource(
+#             rag_corpus=prompt.rag_corpus_name
+#         )
+#     ],
+#     similarity_top_k=10,
+#     vector_distance_threshold=0.4,
+# )
+#
+#
+# root_agent = Agent(
+#     name=prompt.rag_agent_name,
+#     model=prompt.rag_model_name,
+#     description=prompt.rag_agent_description,
+#     instruction=prompt.rag_agent_instruction,
+#     tools=[
+#         ask_vertex_retrieval,
+#     ]
+# )
 
 
-ask_vertex_retrieval = VertexAiRagRetrieval(
-    name=prompt.rag_tool_name,
-    description=prompt.rag_tool_description,
-    rag_resources=[
-        rag.RagResource(
-            rag_corpus=prompt.rag_corpus_name
-        )
-    ],
-    similarity_top_k=10,
-    vector_distance_threshold=0.4,
-)
+############# Vertex AI Search
+vertex_search_tool = VertexAiSearchTool(data_store_id=prompt.vais_datastore_id)
 
-root_agent = Agent(
-    name=prompt.rag_agent_name,
-    model=prompt.rag_model_name,
-    description=prompt.rag_agent_description,
-    instruction=prompt.rag_agent_instruction,
+# Agent Definition
+root_agent = LlmAgent(
+    name=prompt.vais_agent_name,
+    model=prompt.vais_model_name,
     tools=[
-        ask_vertex_retrieval,
-    ]
+        vertex_search_tool
+    ],
+    instruction=prompt.vais_agent_instruction,
+    description=prompt.vais_agent_description,
 )
-
-
 

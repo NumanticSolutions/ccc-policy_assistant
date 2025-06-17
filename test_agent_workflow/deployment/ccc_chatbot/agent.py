@@ -12,26 +12,39 @@ from google.adk.agents import SequentialAgent
 # from authentication import ApiAuthentication
 #
 # # Set environment variables
-# dotenv_path = "data/"
+# dotenv_path = "../data/environment"
 # api_configs = ApiAuthentication(dotenv_path=dotenv_path)
 
 from . import prompt
-from .sub_agents import intake_agent
+# from .sub_agents import intake_agent
 from .sub_agents import rag_agent
-from .sub_agents import memory_agent
+# from .sub_agents import memory_agent
 from .sub_agents import search_agent
 from .sub_agents import synthesis_agent
 
+###################
+# research_pipeline_agent = SequentialAgent(
+#     name=prompt.pipeline_agent_name,
+#     description=prompt.pipeline_agent_description,
+#     sub_agents=[rag_agent,
+#                 search_agent,
+#                 synthesis_agent
+#                 ],
+# )
+# root_agent = research_pipeline_agent
 
-research_pipeline_agent = SequentialAgent(
-    name=prompt.pipeline_agent_name,
-    description=prompt.pipeline_agent_description,
-    sub_agents=[rag_agent,
-                search_agent,
-                synthesis_agent
-                ],
-)
-root_agent = research_pipeline_agent
+
+# research_pipeline_agent = SequentialAgent(
+#     name=prompt.pipeline_agent_name,
+#     description=prompt.pipeline_agent_description,
+#     sub_agents=[rag_agent,
+#                 synthesis_agent
+#                 ],
+# )
+# root_agent = research_pipeline_agent
+
+root_agent = search_agent
+
 
 # policy_assistant_agent = Agent(
 #     name=prompt.chatbot_agent_name,

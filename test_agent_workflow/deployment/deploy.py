@@ -1,4 +1,5 @@
 import os, sys
+import json
 import argparse
 
 import vertexai
@@ -21,25 +22,22 @@ for sd in support_directories:
 #### Step 3. Authenticate
 api_configs = ApiAuthentication(dotenv_path="./data")
 
-# # Import an authentication object
-# utils_path =  os.path.abspath(os.path.join(os.path.dirname(__file__), '../../test_agent_workflow/utils'))
-# sys.path.insert(0, utils_path)
-# from authentication import ApiAuthentication
-# import os_tools as ot
-#
-# # Set environment variables
-# dotenv_path =  os.path.abspath(os.path.join(os.path.dirname(__file__), '../../data/environment'))
-# sys.path.insert(0, dotenv_path)
-# api_configs = ApiAuthentication(dotenv_path=dotenv_path)
-#
-# # Copy agent files into the deployment directory
-# chatbot_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../ccc_chatbot'))
-# source_directory = chatbot_path
-# destination_directory = "./ccc_chatbot"
-# ot.copy_and_replace_recursive(source_directory, destination_directory)
-
 # Import the chatbot
 from ccc_chatbot.agent import root_agent
+from ccc_chatbot.agent import rag_agent
+from ccc_chatbot.agent import search_agent
+from ccc_chatbot.agent import synthesis_agent
+
+### Step 4. Read deployment parameters
+deploy_configs_file = "deployment_configs.json"
+with open(deploy_configs_file, 'r') as infile:
+    deploy_configs = json.load(infile)
+
+# Add agents to deploy configs
+deploy_configs["rag"]["agent"] = rag_agent
+deploy_configs["search"]["agent"] = search_agent
+deploy_configs["synthesis"]["agent"] = synthesis_agent
+deploy_configs["ccc_bot"]["agent"] = root_agent
 
 
 # Initialize Vertex AI API once per session
@@ -48,13 +46,21 @@ vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
               staging_bucket=os.environ["STAGING_BUCKET"])
 
 
-def deploy() -> None:
+def deploy(agent_index: str, deploy_configs) -> None:
     '''
     Function to deploy a new agent to Vertex AI
+
+    agent_name: String indicating which agent is to be deployed
+
     '''
 
     # Set environment variables
     env_vars = None
+
+    # Set parameters
+    root_agent = deploy_configs[agent_index]["agent"]
+    display_name = deploy_configs[agent_index]["display_name"]
+    description = deploy_configs[agent_index]["description"]
 
     # Set an ADK App
     app = AdkApp(agent=root_agent,
@@ -78,13 +84,13 @@ def deploy() -> None:
             "utils"
         ],
         gcs_dir_name=os.environ["STAGING_BUCKET"],
-        display_name="CCC Chatbot",
-        description="An agent providing indepth research on policies affecting California community colleges",
+        display_name=display_name,
+        description=description,
         env_vars=env_vars
     )
 
     # log remote_app
-    print(f"Deployed rag to Vertex AI Agent Engine successfully, resource name: {remote_app.resource_name}")
+    print(f"Deployed {agent_index} agent to Vertex AI Agent Engine successfully, resource name: {remote_app.resource_name}")
 
 def delete(resource_id: str) -> None:
     '''
@@ -107,13 +113,18 @@ def main():
     # Add arguments
     parser.add_argument("-a", "--action", help="Action to perform", dest="action", required=True,
                         choices=["deploy", "delete", "list"], type=str, default="deploy")
-    parser.add_argument("-id", help="Resource ID", dest="resource_id", required=False,
-                        type=str)
+    parser.add_argument("-id", help="Resource ID", dest="resource_id", required=False, type=str)
     args = parser.parse_args()
 
+    # Take action depending on command line inputs
     if args.action == "deploy":
-        print("Starting agent deployment ...")
-        deploy()
+        if not args.resource_id:
+            msg = "Agent ID is required for deploying an agent; currently 'rag', 'search' or 'synthesis'."
+            raise Exception(msg)
+        else:
+            print("Starting agent deployment ...")
+            deploy(agent_index=args.resource_id,
+                   deploy_configs=deploy_configs)
 
     elif args.action == "delete":
         if not args.resource_id:

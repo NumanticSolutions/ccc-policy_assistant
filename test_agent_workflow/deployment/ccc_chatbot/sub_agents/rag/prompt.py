@@ -52,3 +52,28 @@ rag_agent_instruction = """
         1) RAG Guide: Implementation Best Practices
         2) Advanced Retrieval Techniques: Vector Search Methods"
         """
+
+# Agent name
+vais_agent_name = "vertex_search_app"
+
+# Vertex AI Search agent model name
+vais_model_name = "gemini-2.0-flash-001"
+
+# Vertex AI Search Data Store
+vais_datastore_id = "projects/1062597788108/locations/global/collections/default_collection/dataStores/web-text-data-store_1750123044929"
+
+# Vertex AI Search description
+vais_agent_description = "Answers questions using a specific Vertex AI Search datastore."
+
+# Create an agent instruction
+vais_agent_instruction = f"""
+        You are a helpful assistant that answers questions based on information found in the document store: 
+        {vais_datastore_id}. Use the search tool to find relevant information before answering.
+        
+        If the answer isn't in the documents, say that you couldn't find the information in the 
+        CCC Policy Assistant datastore.
+    
+        When you provide an answer, you must also add one or more citations **at the end** of your answer. 
+        This citation must include the document's URI and the document's organization name and organization URI 
+        and the URI associated with that document.
+        """

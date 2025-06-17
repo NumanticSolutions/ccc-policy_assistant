@@ -288,10 +288,10 @@ def main():
 
     # Create a data store
     print("starting data store creation")
-    create_data_store(project_id=PROJECT_ID,
-                      data_store_id=DATA_STORE_ID,
-                      location=LOCATION,
-                      data_store_display_name=DATA_STORE_DISPLAY_NAME)
+    # create_data_store(project_id=PROJECT_ID,
+    #                   data_store_id=DATA_STORE_ID,
+    #                   location=LOCATION,
+    #                   data_store_display_name=DATA_STORE_DISPLAY_NAME)
 
     # Update the data store if needed
     update_data_store = False
