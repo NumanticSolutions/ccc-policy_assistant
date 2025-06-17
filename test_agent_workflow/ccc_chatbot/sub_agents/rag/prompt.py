@@ -13,7 +13,8 @@ rag_agent_name = "rag_search_agent"
 rag_model_name = "gemini-2.0-flash-001"
 
 # Rag agent corpus
-rag_corpus_name = "projects/eternal-bongo-435614-b9/locations/us-central1/ragCorpora/4752423506782715904"
+# rag_corpus_name = "projects/eternal-bongo-435614-b9/locations/us-central1/ragCorpora/4752423506782715904"
+rag_corpus_name = "projects/eternal-bongo-435614-b9/locations/us-central1/ragCorpora/5112711476972355584"
 
 # Agent description
 rag_agent_description = "An agent for retrieving relevant information from a corpus of documents."

@@ -67,6 +67,7 @@ def deploy() -> None:
         requirements=[
             "google-cloud-aiplatform[agent_engines,adk,langchain,ag2,llama_index,evaluation]>=1.88.0",
             "google-adk==1.2.1",
+            "google-cloud-discoveryengine",
             "cloudpickle==3.1.1",
             "python-dotenv",
             "google-auth",

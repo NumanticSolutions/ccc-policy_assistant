@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "media_type": {
+      "type": "string"
+    },
+    "language_code": {
+      "type": "string"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "uri": {
+      "type": "string"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "in_languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "country_of_origin": {
+      "type": "string"
+    },
+    "transcript": {
+      "type": "string"
+    },
+    "content_index": {
+      "type": "integer"
+    },
+    "persons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "custom_role": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "integer"
+          },
+          "uri": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "role"]
+      }
+    },
+    "organizations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "custom_role": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "integer"
+          },
+          "uri": {
+            "type": "string"
+          }
+        },
+        "required": ["name", "role"]
+      }
+    },
+    "hash_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "filter_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "duration": {
+      "type": "string"
+    },
+    "content_rating": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "aggregate_ratings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rating_source": {
+            "type": "string"
+          },
+          "rating_score": {
+            "type": "number"
+          },
+          "rating_count": {
+            "type": "integer"
+          }
+        },
+        "required": ["rating_source"]
+      }
+    },
+    "available_time": {
+                  "type": "string",
+                  "format": "date-time"
+    },
+    "expire_time": {
+                  "type": "string",
+                  "format": "date-time"
+    },
+    "live_event_start_time": {
+                  "type": "string",
+                  "format": "date-time"
+    },
+    "live_event_end_time": {
+                  "type": "string",
+                  "format": "date-time"
+    },
+    "production_year": {
+      "type": "integer"
+    }
+  },
+  "required": ["title", "categories", "uri", "available_time"]
+}

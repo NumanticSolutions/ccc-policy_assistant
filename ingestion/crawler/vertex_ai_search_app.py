@@ -1,8 +1,15 @@
-import os, sys
+# Logical steps
+# 1. Create a Data Store (inside a Collection).
+# 2. Import Documents into that Data Store.
+# 3. Create an Engine/App that points to the Data Store you just created.
 
+import os, sys
+import json
 import time
+
 from google.api_core.client_options import ClientOptions
 from google.cloud import discoveryengine_v1 as discoveryengine
+from google.protobuf import field_mask_pb2, struct_pb2
 
 utils_path = "../../test_agent_workflow/utils"
 sys.path.insert(0, utils_path)
@@ -14,110 +21,38 @@ dotenv_path = "../../data/environment"
 api_configs = ApiAuthentication(dotenv_path=dotenv_path)
 api_configs.set_environ_variables()
 
-
-# --- Configuration: Update these values for your project ---
-PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT"]
+# --- Configuration parameters ---
+PROJECT = os.environ["GOOGLE_CLOUD_PROJECT"]
+PROJECT_ID = os.environ["GOOGLE_CLOUD_PROJECT_ID"]
 LOCATION = "global"  # Or a specific region like "us-central1"
-APP_DISPLAY_NAME = "CCC Web Docs Search"  # A user-friendly name for your app
-DATA_STORE_DISPLAY_NAME = "Web Docs GCS Data"  # A user-friendly name for your data store
-GCS_JSONL_URI = "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/*"  # Use a wildcard (*) to import all files in the folder
+DATA_STORE_DISPLAY_NAME = "Web Text Data"  # A user-friendly name for your data store
+DATA_STORE_ID = "{}-id".format(DATA_STORE_DISPLAY_NAME.lower().replace(" ", "-"))
+ENGINE_NAME = "{}-search".format(DATA_STORE_DISPLAY_NAME.lower().replace(" ", "-"))
+ENGINE_ID = "{}-id".format(ENGINE_NAME)
+GCS_JSONL_URI = "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/*"
+INDUSTRY_VERTICAL = "GENERIC"
+INPUT_FILES = [ "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/calmattersdigitaldemocracyorg_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/cccaoeorg_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/ccrctccolumbiaedu_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/enwikipediaorg_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/icangotocollegecom_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/laocagov_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/nscresearchcenterorg_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/wwwaaccncheedu_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/wwwccccoedu_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/wwwccleagueorg_2025May01_text.jsonl",
+                "gs://ccc-crawl_data_xb/crawl_data/jsonl_files/wwwecsorg_2025May01_text.jsonl"]
 
 
+def create_data_store(project_id: str,
+                      data_store_id: str,
+                      location: str,
+                      data_store_display_name: str):
+    '''
+    Function to create a GCS data store within the default collection
+    '''
 
-# -----------------------------------------------------------------Create a Data Store (inside a Collection).
-# Import Documents into that Data Store.
-# Create an Engine/App that points to the Data Store you just created.
-#
-# 1. Create a Data Store (inside a Collection).
-# 2. Import Documents into that Data Store.
-# 3. Create an Engine/App that points to the Data Store you just created.
-
-def create_search_app(project_id: str, location: str, app_display_name: str) -> str:
-    """Creates a new Vertex AI Search App (Engine)."""
-
-    # The parent path for creating an engine
-    parent = f"projects/{project_id}/locations/{location}/collections/default_collection"
-
-    # The client options for the desired region
-    client_options = (
-        ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
-        if location != "global"
-        else None
-    )
-
-    client = discoveryengine.EngineServiceClient(client_options=client_options)
-
-    # Construct the Engine object
-    engine = discoveryengine.Engine(
-        display_name=app_display_name,
-        # SOLUTION_TYPE_SEARCH is crucial for creating a search app
-        solution_type=discoveryengine.SolutionType.SOLUTION_TYPE_SEARCH,
-    )
-
-    # Create the Engine (this is a Long-Running Operation - LRO)
-    print(f"Creating search app '{app_display_name}'...")
-    operation = client.create_engine(
-        parent=parent,
-        engine=engine,
-        engine_id=app_display_name.lower().replace(" ", "-"),  # Create a stable ID
-    )
-
-    # Wait for the LRO to complete and get the result
-    created_engine = operation.result()
-    print(f"Successfully created app. Resource name: {created_engine.name}")
-
-    return created_engine.name
-
-
-# def create_gcs_data_store(project_id: str, data_store_name: str) -> str:
-#     """Creates a Data Store within a Search App."""
-#
-#     location = engine_name.split('/')[3]  # Extract location from engine name
-#     client_options = (
-#         ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
-#         if location != "global"
-#         else None
-#     )
-#
-#     client = discoveryengine.DataStoreServiceClient(client_options=client_options)
-#
-#     parent = f"projects/{project_id}/locations/{location}/collections/default_collection"
-#
-#     data_store = discoveryengine.DataStore(
-#         display_name=data_store_name,
-#         industry_vertical="GENERIC",  # Use GENERIC for most use cases
-#         # This is correct even for JSONL. It refers to the ingestion method.
-#         content_config=discoveryengine.DataStore.ContentConfig.CONTENT_CONFIG_UNSTRUCTURED_DATA,
-#     )
-#
-#     print(f"Creating data store '{data_store_name}'...")
-#     operation = client.create_data_store(
-#         parent=parent,
-#         data_store=data_store,
-#         data_store_id=data_store_name.lower().replace(" ", "-"),
-#     )
-#
-#     created_data_store = operation.result()
-#     print(f"Successfully created data store. Resource name: {created_data_store.name}")
-#
-#     return created_data_store.name
-
-def create_gcs_data_store(
-    project_id: str,
-    location: str,
-    data_store_name: str
-) -> str:
-    """
-    Creates a GCS Data Store within the default collection.
-
-    Args:
-        project_id: Your Google Cloud project ID.
-        location: The GCP location (e.g., "global", "us-central1").
-        data_store_name: The display name for the new Data Store.
-
-    Returns:
-        The resource name of the created Data Store.
-    """
+    # Establish Discovery Engine client
     client_options = (
         ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
         if location != "global"
@@ -125,86 +60,167 @@ def create_gcs_data_store(
     )
     client = discoveryengine.DataStoreServiceClient(client_options=client_options)
 
-    # The parent for a Data Store is a Collection, not an Engine.
-    # We will use the 'default_collection'.
-    parent = f"projects/{project_id}/locations/{location}/collections/default_collection"
-
+    # Initialize request argument(s)
     data_store = discoveryengine.DataStore(
-        display_name=data_store_name,
-        industry_vertical=discoveryengine.IndustryVertical.GENERIC
+        display_name=data_store_display_name,
+        industry_vertical=discoveryengine.IndustryVertical.GENERIC,
+        content_config=discoveryengine.DataStore.ContentConfig.CONTENT_REQUIRED,
     )
 
-    # Generate a unique ID for the data store
-    data_store_id = data_store_name.lower().replace(" ", "-")
-
-    print(f"Creating data store '{data_store_name}' in parent '{parent}'...")
     operation = client.create_data_store(
-        parent=parent,
-        data_store=data_store,
-        data_store_id=data_store_id,
+        request=discoveryengine.CreateDataStoreRequest(
+            parent=client.collection_path(project_id, location, "default_collection"),
+            data_store=data_store,
+            data_store_id=data_store_id,
+        )
     )
 
-    created_data_store = operation.result()
-    print(f"Successfully created data store. Resource name: {created_data_store.name}")
+    # Make the request
+    response = operation.result(timeout=90)
+    print("Data store created: {}".format(response.name))
+    return response.name
 
-    return created_data_store.name
 
-def import_documents_from_gcs(data_store_name: str, gcs_uri: str):
-    """Triggers a document import from GCS into the specified data store."""
+def update_datastore(project_id: str,
+                     data_store_id: str,
+                     location: str):
+    '''
+    Function to update a datastore usually to pass JSON structured data schema
+    '''
 
-    location = data_store_name.split('/')[3]  # Extract location
+    # Get data store path name
+    data_store_path_name = f"projects/{project_id}/locations/{location}/collections/default_collection/dataStores/{data_store_id}"
+
+    # Set a Discovery Engine client
     client_options = (
         ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
         if location != "global"
         else None
     )
+    client = discoveryengine.DataStoreServiceClient(client_options=client_options)
 
+    # Update data store for JSON schema
+    filename = "gcs_json_schema.json"
+    with open(filename, 'r') as infile:
+        schema_body = json.load(infile)
+
+    # Send PATCH request with updated structured data JSON
+    struct_schema = {"structSchema": json.dumps(schema_body)}
+
+    # Create the DataStore object with the updated schema
+    data_store = discoveryengine.DataStore(
+        name=data_store_path_name,
+        struct_schema=struct_schema,
+    )
+#
+    # Create the FieldMask to indicate that only struct_schema is being updated
+    update_mask = field_mask_pb2.FieldMask(paths=["struct_schema"])
+
+    # Call the API
+    updated_store = client.update_data_store(
+        data_store=data_store,
+        update_mask=update_mask,
+    )
+
+    print(f"Updated data store: {updated_store.name}")
+
+
+def import_documents(project_id: str,
+                     location: str,
+                     data_store_id: str,
+                     gcs_uri: str,
+                     input_files: list):
+    '''
+    Function to import documents to a GCS data store
+    '''
+
+    # Create a client
+    client_options = (
+        ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
+        if location != "global"
+        else None
+    )
     client = discoveryengine.DocumentServiceClient(client_options=client_options)
 
-    # The parent path for the documents is the 'default_branch'
-    parent = client.branch_path(
-        project=PROJECT_ID,
-        location=location,
-        data_store=data_store_name.split('/')[-1],  # Extract data store ID
-        branch="default_branch",
-    )
+    # The full resource name of the search engine branch.
+    # e.g. projects/{project}/locations/{location}/dataStores/{data_store_id}/branches/{branch}
+    parent = client.branch_path(project=project_id,
+                                location=location,
+                                data_store=data_store_id,
+                                branch="default_branch",
+                                )
 
-    request = discoveryengine.ImportDocumentsRequest(
-        parent=parent,
-        gcs_source=discoveryengine.GcsSource(
-            input_uris=[gcs_uri],
-            # The API uses "json" for the JSONL format
-            data_schema="document",
-        ),
-        # INCREMENTAL will add new/update existing docs. FULL will wipe and replace.
-        reconciliation_mode=discoveryengine.ImportDocumentsRequest.ReconciliationMode.INCREMENTAL,
-    )
+    # Create a path to the source documents
+    if len(input_files) > 0:
+        source_documents = INPUT_FILES
+    else:
+        source_documents = [f"{gcs_uri}"]
 
-    print(f"Starting import from {gcs_uri}...")
+    # Send an import documents request
+    request = discoveryengine.ImportDocumentsRequest(parent=parent,
+                                                     gcs_source=discoveryengine.GcsSource(
+                                                         input_uris=source_documents,
+                                                         data_schema="content"
+                                                     ),
+                                # Options: `FULL`, `INCREMENTAL`
+                                reconciliation_mode=discoveryengine.ImportDocumentsRequest.ReconciliationMode.INCREMENTAL,
+                                                     )
+
+    # Make the request
     operation = client.import_documents(request=request)
 
-    print(f"Waiting for import operation '{operation.operation.name}' to complete...")
-    # This can take a long time for large datasets
     response = operation.result()
 
-    print("Import completed!")
-    if response.error_samples:
-        print(f"Found {len(response.error_samples)} errors.")
-        for error in response.error_samples:
-            print(f" - Error: {error.message}")
-    else:
-        print("Import successful with 0 errors.")
+    # Once the operation is complete, get information from operation metadata
+    metadata = discoveryengine.ImportDocumentsMetadata(operation.metadata)
+
+    # Handle the response
+    print("Operation status: {}".format(operation.operation.name))
+    return operation.operation.name
+
+
+def create_engine(project_id: str,
+                  location: str,
+                  engine_name: str,
+                  engine_id: str,
+                  data_store_id: str):
+    '''
+    Function to create a search engine
+    '''
+
+    # Create a client
+    client_options = (
+        ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
+        if location != "global"
+        else None
+    )
+    client = discoveryengine.EngineServiceClient(client_options=client_options)
+
+    # Initialize request argument(s)
+    engine = discoveryengine.Engine(display_name=engine_name,
+                                    solution_type=discoveryengine.SolutionType.SOLUTION_TYPE_SEARCH,
+                                    industry_vertical=discoveryengine.IndustryVertical.GENERIC,
+                                    data_store_ids=[data_store_id],
+                                    search_engine_config=discoveryengine.Engine.SearchEngineConfig(
+                                        search_tier=discoveryengine.SearchTier.SEARCH_TIER_ENTERPRISE),
+                                    )
+
+    request = discoveryengine.CreateEngineRequest(parent=client.collection_path(project_id,
+                                                                                location,
+                                                                                "default_collection"),
+                                                  engine=engine,
+                                                  engine_id=engine.display_name
+                                                  )
+
+    # Make the request
+    operation = client.create_engine(request=request)
+    response = operation.result(timeout=90)
+    print("Engine create: {}".format(response.name))
+    return response.name
 
 def list_all_data_stores(project_id: str, location: str) -> list[discoveryengine.DataStore]:
     """
     Lists all data stores in a given project and location.
-
-    Args:
-        project_id: Your Google Cloud project ID.
-        location: The GCP location (e.g., "global", "us", "eu").
-
-    Returns:
-        A list of DataStore objects.
     """
     # 1. Instantiate the Client
     # A specific endpoint is required for non-global locations.
@@ -234,12 +250,13 @@ def list_all_data_stores(project_id: str, location: str) -> list[discoveryengine
 
     return data_stores
 
-def delete_data_store(name, location):
+def delete_data_store(data_store_path_name: str,
+                      location: str):
     '''
     Function to delete data stores
     '''
 
-    print("Deleting {}".format(name))
+    print("Deleting {}".format(data_store_path_name))
 
     client_options = (
         ClientOptions(api_endpoint=f"{location}-discoveryengine.googleapis.com")
@@ -248,60 +265,60 @@ def delete_data_store(name, location):
     )
     client = discoveryengine.DataStoreServiceClient(client_options=client_options)
 
-    client.delete_data_store(name=name)
+    client.delete_data_store(name=data_store_path_name)
 
 
-
+#----------------- Main ----------------
 def main():
     """Main function to orchestrate the creation process."""
-    try:
 
-        datastores = list_all_data_stores(project_id=PROJECT_ID, location=LOCATION)
+    # List all data stores
+    datastores = list_all_data_stores(project_id=PROJECT_ID,
+                                      location=LOCATION)
+    print("Existing data stores")
+    for ds in datastores:
+        print(ds.name)
 
+    # Delete data stores if needed
+    delete_all_stores = False
+    if delete_all_stores:
         for ds in datastores:
-            print("Existing datastores")
-            print(ds.name)
+            delete_data_store(data_store_path_name=ds.name,
+                              location=LOCATION)
 
-            # print(dir(ds))
+    # Create a data store
+    print("starting data store creation")
+    create_data_store(project_id=PROJECT_ID,
+                      data_store_id=DATA_STORE_ID,
+                      location=LOCATION,
+                      data_store_display_name=DATA_STORE_DISPLAY_NAME)
 
-        # Delete a data store if needed
-        # delete_data_store(name=datastores[0].name, location=LOCATION)
+    # Update the data store if needed
+    update_data_store = False
+    if update_data_store:
+        update_datastore(project_id=PROJECT_ID,
+                         data_store_id=DATA_STORE_ID,
+                         location=LOCATION)
 
+    # Sleep before loading documents
+    print("sleeping")
+    # time.sleep(15)
 
-        # Step 21 Create the Data Store
-        # data_store_resource_name = create_gcs_data_store(project_id=PROJECT_ID,
-        #                                                  location=LOCATION,
-        #                                                  data_store_name=DATA_STORE_DISPLAY_NAME)
+    # Import documents
+    print("starting document importation")
+    # import_documents(project_id=PROJECT_ID,
+    #                  location=LOCATION,
+    #                  data_store_id=DATA_STORE_ID,
+    #                  gcs_uri=GCS_JSONL_URI.format,
+    #                  input_files=INPUT_FILES)
 
-        # Give the system a moment before creating the data store
-        time.sleep(10)
-
-
-        # # Step 3: Import the Documents
-        data_store_name=datastores[0].name
-        print(data_store_name)
-        import_documents_from_gcs(data_store_name=data_store_name,
-                                  gcs_uri=GCS_JSONL_URI)
-
-
-        #data_store_name: str, gcs_uri: str
-        # # Step 1: Create the App (Engine)
-        # engine_resource_name = create_search_app(PROJECT_ID, LOCATION, APP_DISPLAY_NAME)
-        #
-        # # Give the system a moment before creating the data store
-        # time.sleep(10)
-        #
-        #
-        # # Step 3: Import the Documents
-        # import_documents_from_gcs(data_store_resource_name, GCS_JSONL_URI)
-        #
-        # print("\n--- All Done! ---")
-        # print(f"Your new search app is ready in the Google Cloud Console.")
-        # print(f"Project: {PROJECT_ID}, Location: {LOCATION}")
-        # print("You can now go to the Vertex AI -> Search and Conversation section to test it.")
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    # Create Engine
+    print("starting engine creation")
+    # create_engine(project_id=PROJECT_ID,
+    #               location=LOCATION,
+    #               engine_name=ENGINE_NAME,
+    #               engine_id=ENGINE_ID,
+    #               data_store_id=DATA_STORE_ID)
 
 
 if __name__ == "__main__":

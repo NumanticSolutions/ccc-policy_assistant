@@ -18,6 +18,8 @@ from vertexai import rag
 # import vertexai
 
 from . import prompt
+
+
 #
 # utils_path = "../interface/utils"
 # sys.path.insert(0, utils_path)
@@ -40,6 +42,9 @@ from . import prompt
 # Initialize Vertex AI API once per session
 # vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
 #               location=os.environ["GOOGLE_CLOUD_LOCATION"])
+
+
+
 
 ask_vertex_retrieval = VertexAiRagRetrieval(
     name=prompt.rag_tool_name,

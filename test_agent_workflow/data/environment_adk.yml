@@ -19,7 +19,6 @@ dependencies:
       - numpy
       - pandas-gbq
       - python-dotenv
-
       - streamlit
 
 
