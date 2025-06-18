@@ -26,13 +26,15 @@ class ApiAuthentication:
     '''
 
     def __init__(self,
+                 client: str,
                  **kwargs):
         '''
         Initialize class
 
         '''
 
-        self.dotenv_path = "../../data/environment"
+        self.dotenv_path = "{}/.numantic/keys/{}".format(os.environ["HOME"],
+                                                        client)
         self.cred_source = "dotenv"
 
         # Update any key word args
