@@ -3,35 +3,32 @@
 #
 
 #
-# * A retrieval-centric interface for CCC-PA
+# A retrieval-centric interface for CCC-PA
 #
 
 import sys, os
 import streamlit as st
-
-import asyncio
-
 import vertexai
-from vertexai import agent_engines
+# from vertexai import agent_engines
+# from google.adk.memory import InMemoryMemoryService
 
-from google.adk.memory import InMemoryMemoryService
 
-
-# IMport authentication object
-utils_path = "../utils"
+# Import authentication object
+utils_path = "../utils/"
 sys.path.insert(0, utils_path)
 from authentication import ApiAuthentication
+api_configs = ApiAuthentication(client="CCC")
 
-# Set environment variables
-dotenv_path = "../../data/environment"
-api_configs = ApiAuthentication(dotenv_path=dotenv_path)
-api_configs.set_environ_variables()
 
 # Initialize Vertex AI API once per session
 vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
               location=os.environ["GOOGLE_CLOUD_LOCATION"],
               staging_bucket=os.environ["STAGING_BUCKET"])
 
+# Import chatbot
+chatbot_path = "../"
+sys.path.insert(0, chatbot_path)
+from ccc_chatbot_agent import cccChatBot
 
 ########## Set up Streamlit
 st.set_page_config(page_title="CCC-PA")
@@ -60,8 +57,6 @@ bot_summary = ("This an experimental chatbot employing Artificial Intelligence t
                "information related to community colleges. Some examples might include board members, "
                "administrators, staff, students, community activists or legislators. \n")
 
-
-
 st.text(bot_summary)
 st.divider()
 
@@ -75,18 +70,19 @@ if "bot" not in st.session_state:
     #                                              chat_bot_verbose=False,
     #                                              dot_env_path = "../data/environment")
 
-    st.session_state["bot"] = agent_engines.get(os.getenv("AGENT_ENGINE_ID"))
+    # Create a chatbot for this user
+    user_id = "u_123"
+    st.session_state["bot"] = cccChatBot(user_id=user_id)
 
-
-
-
+#
+#
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
-# displays the chat history when app is rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+#
+# # displays the chat history when app is rerun
+# for message in st.session_state.messages:
+#     with st.chat_message(message["role"]):
+#         st.markdown(message["content"])
 
 with st.sidebar:
     # sidebar_msg = ("This is an experimental chatbot that is still under development. "
@@ -129,13 +125,40 @@ with st.sidebar:
 
         st.text("\n")
         ### ??? st.session_state["bot"].version
-        version_msg = ("Version : " + "ADK May 26, 2025")
+        version_msg = ("Version : " + "ADK Jun 27, 2025")
         st.markdown(version_msg)
 
+
+# display function
+def format_agent_output(report_dict: dict):
+    """
+    Function to format agent's output into Markdown for interface display
+    """
+
+    # Display results
+    for key in report_dict.keys():
+        if key == "report_title":
+            st.markdown("## {}\n\n".format(report_dict[key]))
+        elif key == "report_executive_summary":
+            st.markdown("### Summary: \n{}\n".format(report_dict[key]))
+        elif key == "report_body":
+            st.markdown("### Report: \n{}\n".format(report_dict[key]))
+        elif key == "report_references":
+            st.markdown("### References: \n{}\n".format(report_dict[key]))
+        elif key == "reference_uris":
+            # Convert URLs to markdown list
+            ref_uris_md = ["- {}\n".format(u) for u in report_dict["reference_uris"]]
+            st.markdown("### Reference URLs \n")
+            st.markdown(" ".join(ref_uris_md))
+
 # displays the chat history when app is rerun
-# for message in st.session_state.messages:
-#     with st.chat_message(message["role"]):
-#         st.markdown(message["content"])
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        if message["role"] == "user":
+            st.markdown(message["content"])
+        else:
+            format_agent_output(report_dict=message["content"])
+
 
 # Reset button
 columns = st.columns(4)
@@ -145,24 +168,10 @@ reset_button = columns[3].button("Clear Chat")
 # Input box for user's query
 user_input = st.chat_input("Your message")
 
-# memory_service = InMemoryMemoryService()
-#
-# async def update_memory_service(memory_service, session):
-#
-#     ############################################
-#     for key in session.keys():
-#         st.markdown(key)
-#         st.markdown(session[key])
-#     return await memory_service.add_session_to_memory(session)
 
-
-# Create a session
-user_id = "u_123"
-st.session_state["session"] = st.session_state["bot"].create_session(user_id=user_id)
-############################################
-# st.markdown(st.session_state["session"])
 
 if user_input:
+
     # Display user's message
     with st.chat_message("user"):
         st.markdown(user_input)
@@ -170,37 +179,31 @@ if user_input:
     # Store user's query in the chat history
     st.session_state.messages.append({"role": "user", "content": user_input})
 
-    # Get the AI assistant's response
-    # ????????????????????
-    # st.session_state["bot"].show_conversation(input_message=user_input)
+    # Query the agent
+    st.session_state["bot"].stream_and_parse_query(query=user_input)
 
+    st.session_state.messages.append({"role": "assistant",
+                                      "content": st.session_state["bot"].report_dict})
 
+    # Display results
+    format_agent_output(report_dict=st.session_state["bot"].report_dict)
 
-    agent_response = st.session_state["bot"].stream_query(message=user_input,
-                                                          user_id=user_id)
+    # # Display results
+    # for key in st.session_state["bot"].report_dict.keys():
+    #     if key == "report_title":
+    #         st.markdown("## {}\n\n".format(st.session_state["bot"].report_dict[key]))
+    #     elif key == "report_executive_summary":
+    #         st.markdown("### Summary: \n{}\n".format(st.session_state["bot"].report_dict[key]))
+    #     elif key == "report_body":
+    #         st.markdown("### Report: \n{}\n".format(st.session_state["bot"].report_dict[key]))
+    #     elif key == "report_references":
+    #         st.markdown("### References: \n{}\n".format(st.session_state["bot"].report_dict[key]))
+    #     elif key == "reference_uris":
+    #         # Convert URLs to markdown list
+    #         ref_uris_md = ["- {}\n".format(u) for u in st.session_state["bot"].report_dict["reference_uris"]]
+    #         st.markdown("### Reference URLs \n")
+    #         st.markdown(" ".join(ref_uris_md))
 
-    for event in agent_response:
-        if event["author"] == "intake_agent":
-            for entry in event["content"]["parts"]:
-                ai_response = entry["text"]
-                st.session_state.messages.append({"role": "assistant", "content": ai_response})
-
-            # Display assistant's message
-            st.markdown(ai_response)
-
-        if event["author"] == "synthesis_agent":
-            for entry in event["content"]["parts"]:
-                ai_response = entry["text"]
-                st.session_state.messages.append({"role": "assistant", "content": ai_response})
-
-                # Display assistant's message
-                st.markdown(ai_response)
-                # with st.chat_message("assistant"):
-                #     st.markdown(ai_response)
-
-    ############################################
-    # st.markdown(st.session_state["session"])
-    # memory_service = asyncio.run(update_memory_service(memory_service, st.session_state["session"]))
 
 
 
@@ -212,6 +215,6 @@ if reset_button:
     # st.session_state["bot"] = None
     # memory.clear()
     st.rerun()
-    # st.cache_data.clear()
-    rest_button = False
+    st.cache_data.clear()
+    # rest_button = False
 

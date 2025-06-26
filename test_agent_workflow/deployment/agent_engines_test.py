@@ -128,6 +128,6 @@ async def main(agent_index: str,
 
 
 if __name__ == "__main__":
-    agent_index = "rag"
+    agent_index = "synthesis"
     asyncio.run(main(agent_index=agent_index,
                      deploy_configs=deploy_configs))

@@ -17,18 +17,19 @@ api_configs = ApiAuthentication(client="CCC")
 
 class readGoogleSearchResults:
     '''
-    Class to read and parse Vertex AI Search App results
+    Class to read and parse Google AI Search agent App results
 
     '''
 
-    def __init__(self, query: str,
+    def __init__(self,
+                 query: str,
                  user_id: str):
         '''
         Initialize class
         '''
 
         # Get the agent name
-        self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/6068151897137610752"
+        self.resource_name = "projects/eternal-bongo-435614-b9/locations/us-central1/reasoningEngines/8448585775179628544"
 
         # Users's query
         self.query = query
@@ -45,7 +46,7 @@ class readGoogleSearchResults:
         Call the API to get search results for user's query
         '''
 
-        # Retreive agent
+        # Retrieve agent
         self.agent_engine = agent_engines.get(self.resource_name)
 
         # Establish session
@@ -53,8 +54,8 @@ class readGoogleSearchResults:
 
         # Get agent response
         self.result = self.agent_engine.stream_query(message=self.query,
-                                                 session_id=self.session["id"],
-                                                 user_id=self.user_id)
+                                                     session_id=self.session["id"],
+                                                     user_id=self.user_id)
 
         # Put results into a dictionary for later access
         self.events = []
@@ -80,14 +81,18 @@ class readGoogleSearchResults:
                             self.contents.append(txt_dict["text"])
 
             # Find domains and URIs from grounding_metadata
+            uri_index = 0
             for gc in event["grounding_metadata"]["grounding_chunks"]:
                 for key in gc.keys():
                     if key == "web":
                         self.domains.append(gc["web"]["domain"])
-                        self.uris.append(gc["web"]["uri"])
+                        self.uris.append(dict(uri_index=uri_index,
+                                              uri=gc["web"]["uri"],
+                                              uri_text=gc["web"]["domain"])
+                                         )
+                        uri_index += 1
 
         self.domains = list(set(self.domains))
-        self.uris = list(set(self.uris))
 
 
 
@@ -173,15 +178,21 @@ class readVaiSearchResults:
         Method to parse response into the elements of interest
         '''
 
+        max_char_uri_text = 45
 
         self.organizations = []
         self.uris = []
         self.contents = []
         dorgs = []
 
-        for result in self.response_content["results"]:
-            self.contents.append(result["document"]["structData"]["transcript"])
-            self.uris.append(result["document"]["structData"]["uri"])
+        for i, result in enumerate(self.response_content["results"]):
+            transcript = result["document"]["structData"]["transcript"]
+            self.contents.append(transcript)
+            self.uris.append(dict(uri_index=i,
+                                  uri=result["document"]["structData"]["uri"],
+                                  uri_text="{} ...".format(transcript[:max_char_uri_text].strip())
+                                  )
+                             )
             dorgs.append(json.dumps(result["document"]["structData"]["organizations"][0]))
 
         # All organizations
@@ -197,5 +208,4 @@ class readVaiSearchResults:
                     self.organizations.append(dorg)
 
         # remove duplicates from these lists
-        self.uris = list(set(self.uris))
         self.contents = list(set(self.contents))

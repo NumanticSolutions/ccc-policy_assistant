@@ -1,19 +1,12 @@
-
-
 from google.adk.agents.llm_agent import Agent, LlmAgent
 from google.adk.agents import SequentialAgent
-
-
 
 ###### Comment out when deploying
 # import os, sys
 # utils_path = "utils/"
 # sys.path.insert(0, utils_path)
 # from authentication import ApiAuthentication
-#
-# # Set environment variables
-# dotenv_path = "../data/environment"
-# api_configs = ApiAuthentication(dotenv_path=dotenv_path)
+# api_configs = ApiAuthentication(client="CCC")
 
 from . import prompt
 # from .sub_agents import intake_agent
@@ -43,7 +36,7 @@ from .sub_agents import synthesis_agent
 # )
 # root_agent = research_pipeline_agent
 
-root_agent = search_agent
+# root_agent = synthesis_agent
 
 
 # policy_assistant_agent = Agent(

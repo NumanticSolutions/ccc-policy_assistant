@@ -23,7 +23,7 @@ for sd in support_directories:
 api_configs = ApiAuthentication(dotenv_path="./data")
 
 # Import the chatbot
-from ccc_chatbot.agent import root_agent
+# from ccc_chatbot.agent import root_agent
 from ccc_chatbot.agent import rag_agent
 from ccc_chatbot.agent import search_agent
 from ccc_chatbot.agent import synthesis_agent
@@ -37,7 +37,7 @@ with open(deploy_configs_file, 'r') as infile:
 deploy_configs["rag"]["agent"] = rag_agent
 deploy_configs["search"]["agent"] = search_agent
 deploy_configs["synthesis"]["agent"] = synthesis_agent
-deploy_configs["ccc_bot"]["agent"] = root_agent
+# deploy_configs["ccc_bot"]["agent"] = root_agent
 
 
 # Initialize Vertex AI API once per session
@@ -71,12 +71,13 @@ def deploy(agent_index: str, deploy_configs) -> None:
     remote_app = agent_engines.create(
         app,
         requirements=[
-            "google-cloud-aiplatform[agent_engines,adk,langchain,ag2,llama_index,evaluation]>=1.88.0",
-            "google-adk==1.2.1",
-            "google-cloud-discoveryengine",
+            "google-cloud-aiplatform[agent_engines,adk,langchain,ag2,llama_index,evaluation]==1.98.0",
+            "google-adk==1.4.2",
+            "google-cloud-discoveryengine==0.13.9",
             "cloudpickle==3.1.1",
+            "pydantic==2.11.7",
             "python-dotenv",
-            "google-auth",
+            "google-auth"
         ],
         extra_packages=[
             "ccc_chatbot",
@@ -118,7 +119,7 @@ def main():
 
     # Take action depending on command line inputs
     if args.action == "deploy":
-        if not args.resource_id:
+        if args.resource_id not in ["rag", "search", "synthesis"]:
             msg = "Agent ID is required for deploying an agent; currently 'rag', 'search' or 'synthesis'."
             raise Exception(msg)
         else:
