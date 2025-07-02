@@ -54,13 +54,15 @@ rag_agent_instruction = """
         """
 
 # Agent name
-vais_agent_name = "vertex_search_app"
+# vais_agent_name = "vertex_search_app"
+vais_agent_name = "vertex_combo_search_app"
 
 # Vertex AI Search agent model name
 vais_model_name = "gemini-2.0-flash-001"
 
 # Vertex AI Search Data Store
-vais_datastore_id = "projects/1062597788108/locations/global/collections/default_collection/dataStores/web-text-data-store_1750123044929"
+# vais_datastore_id = "projects/1062597788108/locations/global/collections/default_collection/dataStores/web-text-data-store_1750123044929"
+vais_datastore_id = "projects/1062597788108/locations/global/collections/default_collection/dataStores/ccc-combo-datastore_1751417704658"
 
 # Vertex AI Search description
 vais_agent_description = "Answers questions using a specific Vertex AI Search datastore."

@@ -2,6 +2,9 @@ import os
 import shutil
 
 def copy_and_replace_recursive(src_dir, dst_dir):
+    '''
+    Function to copy and replace a directory including all files in all subdirectories
+    '''
     # Ensure source directory exists
     if not os.path.isdir(src_dir):
         raise FileNotFoundError(f"Source directory does not exist: {src_dir}")

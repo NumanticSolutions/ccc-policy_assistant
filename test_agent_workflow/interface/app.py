@@ -66,10 +66,6 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 if "bot" not in st.session_state:
-    # st.session_state["bot"] = CCCPolicyAssistant(chroma_collection_name = "crawl_docs-vai-2",
-    #                                              chat_bot_verbose=False,
-    #                                              dot_env_path = "../data/environment")
-
     # Create a chatbot for this user
     user_id = "u_123"
     st.session_state["bot"] = cccChatBot(user_id=user_id)
