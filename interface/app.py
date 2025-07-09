@@ -86,7 +86,7 @@ if "bot" not in st.session_state:
                    "doesn't work, please refresh this web page and try again. ")
             st.markdown(msg)
             time.sleep(5)
-            st.experimental_rerun()
+            st.rerun()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
