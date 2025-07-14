@@ -101,17 +101,33 @@ def format_agent_output(report_dict: dict):
     for key in report_dict.keys():
         if key == "report_title":
             st.markdown("## {}\n\n".format(report_dict[key]))
+
         elif key == "report_executive_summary":
             st.markdown("### Summary: \n{}\n".format(report_dict[key]))
+
         elif key == "report_body":
             st.markdown("### Report: \n{}\n".format(report_dict[key]))
+
         elif key == "report_references":
             st.markdown("### References: \n{}\n".format(report_dict[key]))
+
         elif key == "reference_uris":
             # Convert URLs to markdown list
             ref_uris_md = ["- {}\n".format(u) for u in report_dict["reference_uris"]]
             st.markdown("### Reference URLs \n")
             st.markdown(" ".join(ref_uris_md))
+###############################
+        elif key == "relevant_data_yes_or_no" and report_dict["relevant_data_yes_or_no"] == True:
+            msg = ("I did a search of the Integrated Postsecondary Education Data System (IPEDS) "
+                   "datasets from the U.S. Department of Education and found data relevant to "
+                   "your query. \n\nHere's are my findings: {}").format(report_dict["description_of_relevant_data"])
+            st.markdown(msg)
+
+        elif key == "relevant_data_yes_or_no" and report_dict["relevant_data_yes_or_no"] == False:
+            msg = ("I did a search of the Integrated Postsecondary Education Data System (IPEDS) "
+                   "datasets from the U.S. Department of Education but did not find data relevant to "
+                   "your query. ")
+            st.markdown(msg)
 
 
 with st.sidebar:
@@ -242,11 +258,16 @@ if user_input:
 
     # Display IPEDS search results
     st.markdown("### Data Analysis Assistant")
-    st.markdown(st.session_state["bot"].ip_results.contents[0])
+
+    # Parse IPEDS
+    st.session_state["bot"].parse_ipeds_search_results()
+
+    # Format and display IPEDS repot Dict
+    format_agent_output(report_dict=st.session_state["bot"].ipeds_report_dict)
 
     # Add IPEDS
     st.session_state.messages.append({"role": "data_assistant",
-                                      "content": st.session_state["bot"].ip_results.contents[0]})
+                                      "content": st.session_state["bot"].ipeds_result})
 
     # Add to BigQuery
     # Create response logger object parameters
@@ -260,9 +281,6 @@ if user_input:
 
     bq_logger = rl.ResponseLogger()
     bq_logger.response_to_bq(rlog_params=rlog_params)
-
-
-
 
 
 # Option to clear chat history

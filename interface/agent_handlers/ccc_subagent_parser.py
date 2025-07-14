@@ -10,11 +10,10 @@ import json
 # import vertexai
 from vertexai import agent_engines
 
-# Set environment variables
-# utils_path = "utils/"
-# sys.path.insert(0, utils_path)
-# from authentication import ApiAuthentication
-# api_configs = ApiAuthentication(client="CCC")
+# Text cleaning
+utils_path = "../utils/"
+sys.path.insert(0, utils_path)
+import text_cleaning_tools as tct
 
 
 class getSubAgentResults:
@@ -40,7 +39,9 @@ class getSubAgentResults:
             self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/7423647424045907968"
 
         elif rag_agent == "rag_ipeds":
-            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/59136133388304384"
+            # self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/59136133388304384"
+            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/1676772824544444416"
+
 
         elif rag_agent == "search":
             self.resource_name = "projects/eternal-bongo-435614-b9/locations/us-central1/reasoningEngines/8448585775179628544"
@@ -98,7 +99,7 @@ class getSubAgentResults:
                 for key in event.keys():
                     if type(event[key]) == dict and key == "content":
                         for txt_dict in event[key]["parts"]:
-                            self.contents.append(txt_dict["text"])
+                            self.contents.append(tct.clean_contents(intext=txt_dict["text"]))
 
             # Find domains and URIs from grounding_metadata
             try:
@@ -175,7 +176,7 @@ class getSubAgentResults:
                 for key in event.keys():
                     if type(event[key]) == dict and key == "content":
                         for txt_dict in event[key]["parts"]:
-                            self.contents.append(txt_dict["text"])
+                            self.contents.append(tct.clean_contents(intext=txt_dict["text"]))
 
             # Find domains and URIs from grounding_metadata
             uri_index = 0
@@ -190,3 +191,5 @@ class getSubAgentResults:
                         uri_index += 1
 
         self.domains = list(set(self.domains))
+
+

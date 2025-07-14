@@ -153,4 +153,35 @@ class cccChatBot:
         # Add these to report dictionary
         self.report_dict["reference_uris"] = ref_uris
 
+    def parse_ipeds_search_results(self):
+        '''
+        Method to parse the IPEDS rag agent to determine if there are relevant IPEDS to query
+        '''
+
+
+        try:
+            res_text = self.ip_results.contents[0]
+            res_text = res_text[res_text.find("{"): res_text.rfind("}") + 1]
+
+            self.ipeds_report_dict = json.loads(res_text)
+
+        except:
+            self.ipeds_report_dict = dict(relevant_data_yes_or_no=False)
+
+        if self.ipeds_report_dict["relevant_data_yes_or_no"] == True:
+            msg = ("I did a search of the Integrated Postsecondary Education Data System (IPEDS) "
+                   "datasets from the U.S. Department of Education and found data relevant to "
+                   "your query. \n\n"
+                   "Here's are my findings: {}").format(self.ipeds_report_dict["description_of_relevant_data"])
+
+            self.ipeds_result = msg
+
+        else:
+            msg = ("I did a search of the Integrated Postsecondary Education Data System (IPEDS) "
+                   "datasets from the U.S. Department of Education but did not find data relevant to "
+                   "your query. ")
+
+            self.ipeds_result = msg
+
+
 

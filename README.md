@@ -11,7 +11,7 @@ By making this tool available, we hope to demonstrate how policy advocacy can be
 
 Version 2 has been built using Google's new [Agent Development Kit](https://google.github.io/adk-docs/).
 
-July 7, 2025
+July 14, 2025
 
 
 ## Quick start
