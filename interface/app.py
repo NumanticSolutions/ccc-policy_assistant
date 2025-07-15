@@ -71,22 +71,23 @@ if "chat_history" not in st.session_state:
 if "bot" not in st.session_state:
     # Create a chatbot for this user
     user_id = "u_123"
-    try:
-        st.session_state["bot"] = cccChatBot(user_id=user_id)
-    except:
-        try:
-            time.sleep (5)
-            msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
-                   "doesn't work, please refresh this web page and try again. ")
-            st.markdown(msg)
-            st.session_state["bot"] = cccChatBot(user_id=user_id)
-
-        except:
-            msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
-                   "doesn't work, please refresh this web page and try again. ")
-            st.markdown(msg)
-            time.sleep(5)
-            st.rerun()
+    st.session_state["bot"] = cccChatBot(user_id=user_id)
+    # try:
+    #     st.session_state["bot"] = cccChatBot(user_id=user_id)
+    # except:
+    #     try:
+    #         time.sleep (5)
+    #         msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
+    #                "doesn't work, please refresh this web page and try again. ")
+    #         st.markdown(msg)
+    #         st.session_state["bot"] = cccChatBot(user_id=user_id)
+    #
+    #     except:
+    #         msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
+    #                "doesn't work, please refresh this web page and try again. ")
+    #         st.markdown(msg)
+    #         time.sleep(5)
+    #         st.rerun()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
