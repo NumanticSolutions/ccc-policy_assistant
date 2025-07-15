@@ -271,5 +271,5 @@ websockets==15.0.1
 wrapt==1.17.2
 xxhash==3.5.0
 yarl==1.20.1
-zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1749421620841/work
+zipp==3.23.0
 zstandard==0.23.0
