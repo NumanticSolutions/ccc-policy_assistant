@@ -223,13 +223,13 @@ if user_input:
         except:
             try:
                 time.sleep(5)
-                msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
+                msg = ("We're having trouble submitting queries to the CCC Policy Assistant. We're going to try again, but if that "
                        "doesn't work, please refresh this web page and try again. ")
                 st.markdown(msg)
                 st.session_state["bot"].stream_and_parse_query(query=user_input)
 
             except:
-                msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
+                msg = ("We're having trouble submitting queries to the CCC Policy Assistant. We're going to try again, but if that "
                        "doesn't work, please refresh this web page and try again. ")
                 st.markdown(msg)
                 time.sleep(5)
@@ -256,31 +256,34 @@ if user_input:
     bq_logger = rl.ResponseLogger()
     bq_logger.response_to_bq(rlog_params=rlog_params)
 
-    # Display IPEDS search results
-    st.markdown("### Data Analysis Assistant")
-
-    # Parse IPEDS
-    st.session_state["bot"].parse_ipeds_search_results()
-
-    # Format and display IPEDS repot Dict
-    format_agent_output(report_dict=st.session_state["bot"].ipeds_report_dict)
-
-    # Add IPEDS
-    st.session_state.messages.append({"role": "data_assistant",
-                                      "content": st.session_state["bot"].ipeds_result})
-
-    # Add to BigQuery
-    # Create response logger object parameters
-    rlog_params = {"query": user_input,
-                   "response": st.session_state["bot"].ip_results.contents[0],
-                   "app": "ccc_policy_assist",
-                   "version": "2507",
-                   "ai": "gemini-2.0-flash-001",
-                   "agent": "rag_ipeds",
-                   "comments": "testing ccc streamlit app"}
-
-    bq_logger = rl.ResponseLogger()
-    bq_logger.response_to_bq(rlog_params=rlog_params)
+    ################################ Data Agent
+    # # Display IPEDS search results
+    # st.markdown("### Data Analysis Assistant")
+    #
+    # # Parse IPEDS
+    # st.session_state["bot"].parse_ipeds_search_results()
+    #
+    # # Format and display IPEDS repot Dict
+    # format_agent_output(report_dict=st.session_state["bot"].ipeds_report_dict)
+    #
+    # # Add IPEDS
+    # st.session_state.messages.append({"role": "data_assistant",
+    #                                   "content": st.session_state["bot"].ipeds_result})
+    #
+    # # Add to BigQuery
+    # # Create response logger object parameters
+    # rlog_params = {"query": user_input,
+    #                "response": st.session_state["bot"].ip_results.contents[0],
+    #                "app": "ccc_policy_assist",
+    #                "version": "2507",
+    #                "ai": "gemini-2.0-flash-001",
+    #                "agent": "rag_ipeds",
+    #                "comments": "testing ccc streamlit app"}
+    #
+    # bq_logger = rl.ResponseLogger()
+    # bq_logger.response_to_bq(rlog_params=rlog_params)
+    #
+    #######################
 
 
 # Option to clear chat history
