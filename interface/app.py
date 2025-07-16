@@ -3,7 +3,7 @@
 #
 
 #
-# A retrieval-centric interface for CCC-PA
+# A retrieval-centric interface for CCC-PA Version 2
 #
 
 import sys, os
@@ -11,27 +11,40 @@ import json
 import time
 import streamlit as st
 import vertexai
-# from vertexai import agent_engines
-# from google.adk.memory import InMemoryMemoryService
-
 
 # Import authentication object
 utils_path = "utils/"
 sys.path.insert(0, utils_path)
 from authentication import ApiAuthentication
-api_configs = ApiAuthentication(client="CCC")
 import response_logger as rl
-
-
-# Initialize Vertex AI API once per session
-vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
-              location=os.environ["GOOGLE_CLOUD_LOCATION"],
-              staging_bucket=os.environ["STAGING_BUCKET"])
 
 # Import chatbot
 chatbot_path = "agent_handlers/"
 sys.path.insert(0, chatbot_path)
 from ccc_chatbot_agent import cccChatBot
+
+# Initialize Vertex AI API once per session
+try:
+    # Get get credentials and set envirvonment variables
+    api_configs = ApiAuthentication(client="CCC")
+
+except:
+    pass
+
+# Check that we have necessary environment variables
+req_env_vars = ["GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION",
+                "STAGING_BUCKET", "GOOGLE_APPLICATION_CREDENTIALS"]
+for rqv in req_env_vars:
+    if rqv not in os.environ:
+        msg = ("The following environment variables are required but seem to be missing; "
+               "Please review: {}").format(req_env_vars)
+        raise ValueError(msg)
+
+# Initialize Vertex AI
+vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
+              location=os.environ["GOOGLE_CLOUD_LOCATION"],
+              staging_bucket=os.environ["STAGING_BUCKET"])
+
 
 ########## Set up Streamlit
 st.set_page_config(page_title="CCC-PA")
@@ -71,23 +84,22 @@ if "chat_history" not in st.session_state:
 if "bot" not in st.session_state:
     # Create a chatbot for this user
     user_id = "u_123"
-    st.session_state["bot"] = cccChatBot(user_id=user_id)
-    # try:
-    #     st.session_state["bot"] = cccChatBot(user_id=user_id)
-    # except:
-    #     try:
-    #         time.sleep (5)
-    #         msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
-    #                "doesn't work, please refresh this web page and try again. ")
-    #         st.markdown(msg)
-    #         st.session_state["bot"] = cccChatBot(user_id=user_id)
-    #
-    #     except:
-    #         msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
-    #                "doesn't work, please refresh this web page and try again. ")
-    #         st.markdown(msg)
-    #         time.sleep(5)
-    #         st.rerun()
+    try:
+        st.session_state["bot"] = cccChatBot(user_id=user_id)
+    except:
+        try:
+            time.sleep (5)
+            msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
+                   "doesn't work, please refresh this web page and try again. ")
+            st.markdown(msg)
+            st.session_state["bot"] = cccChatBot(user_id=user_id)
+
+        except:
+            msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
+                   "doesn't work, please refresh this web page and try again. ")
+            st.markdown(msg)
+            time.sleep(5)
+            st.rerun()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -97,7 +109,6 @@ def format_agent_output(report_dict: dict):
     """
     Function to format agent's output into Markdown for interface display
     """
-
     # Display results
     for key in report_dict.keys():
         if key == "report_title":
@@ -117,7 +128,7 @@ def format_agent_output(report_dict: dict):
             ref_uris_md = ["- {}\n".format(u) for u in report_dict["reference_uris"]]
             st.markdown("### Reference URLs \n")
             st.markdown(" ".join(ref_uris_md))
-###############################
+
         elif key == "relevant_data_yes_or_no" and report_dict["relevant_data_yes_or_no"] == True:
             msg = ("I did a search of the Integrated Postsecondary Education Data System (IPEDS) "
                    "datasets from the U.S. Department of Education and found data relevant to "
@@ -132,10 +143,6 @@ def format_agent_output(report_dict: dict):
 
 
 with st.sidebar:
-    # sidebar_msg = ("This is an experimental chatbot that is still under development. "
-    #                "Please reach out with feedback, suggestions and comments."
-    #                )
-
     sidebar_msg = ("Overview")
 
     st.header(sidebar_msg)
@@ -175,7 +182,6 @@ with st.sidebar:
         version_msg = ("Version : " + "ADK Jun 27, 2025")
         st.markdown(version_msg)
 
-
 # Reset button
 columns = st.columns(4)
 reset_button = columns[3].button("Clear Chat")
@@ -186,7 +192,7 @@ chat_placeholder = st.empty()
 # Input box for user's query
 user_input = st.chat_input("Your message")
 
-
+######## Chat stuff
 if user_input:
 
     # Empty the screen
