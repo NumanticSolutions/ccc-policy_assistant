@@ -10,13 +10,6 @@ import json
 import vertexai
 from vertexai import agent_engines
 
-# Initialize Vertex AI
-vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
-              location=os.environ["GOOGLE_CLOUD_LOCATION"],
-              staging_bucket=os.environ["STAGING_BUCKET"])
-
-
-
 from ccc_subagent_parser import getSubAgentResults
 
 class cccChatBot:

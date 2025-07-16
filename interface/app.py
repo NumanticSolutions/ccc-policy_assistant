@@ -25,27 +25,26 @@ sys.path.insert(0, chatbot_path)
 from ccc_chatbot_agent import cccChatBot
 
 # Initialize Vertex AI API once per session
-try:
-    # Get get credentials and set envirvonment variables
-    api_configs = ApiAuthentication(client="CCC")
-
-except:
-    pass
-
-# Check that we have necessary environment variables
-req_env_vars = ["GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION",
-                "STAGING_BUCKET", "GOOGLE_APPLICATION_CREDENTIALS"]
-for rqv in req_env_vars:
-    if rqv not in os.environ:
-        msg = ("The following environment variables are required but seem to be missing; "
-               "Please review: {}").format(req_env_vars)
-        raise ValueError(msg)
+# try:
+#     # Get get credentials and set envirvonment variables
+#     api_configs = ApiAuthentication(client="CCC")
+#
+# except:
+#     pass
+#
+# # Check that we have necessary environment variables
+# req_env_vars = ["GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION",
+#                 "STAGING_BUCKET", "GOOGLE_APPLICATION_CREDENTIALS"]
+# for rqv in req_env_vars:
+#     if rqv not in os.environ:
+#         msg = ("The following environment variables are required but seem to be missing; "
+#                "Please review: {}").format(req_env_vars)
+#         raise ValueError(msg)
 
 # Initialize Vertex AI
 vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
               location=os.environ["GOOGLE_CLOUD_LOCATION"],
               staging_bucket=os.environ["STAGING_BUCKET"])
-
 
 ########## Set up Streamlit
 st.set_page_config(page_title="CCC-PA")
@@ -88,22 +87,13 @@ if "bot" not in st.session_state:
     try:
         st.session_state["bot"] = cccChatBot(user_id=user_id)
     except:
-        try:
-            time.sleep (5)
-            msg = ("TRY BOT: We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
-                   "doesn't work, please refresh this web page and try again. ")
-            st.markdown(msg)
-            # st.markdown(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
-            st.markdown(traceback.format_exc())
-            st.session_state["bot"] = cccChatBot(user_id=user_id)
+        time.sleep (5)
+        msg = ("TRY BOT: We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
+               "doesn't work, please refresh this web page and try again. ")
+        st.markdown(msg)
+        st.markdown(traceback.format_exc())
+        st.session_state["bot"] = cccChatBot(user_id=user_id)
 
-        except:
-            msg = ("EXCEPT BOT: We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
-                   "doesn't work, please refresh this web page and try again. ")
-            st.markdown(msg)
-            st.markdown(traceback.format_exc())
-            time.sleep(5)
-            st.rerun()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -232,22 +222,12 @@ if user_input:
         try:
             st.session_state["bot"].stream_and_parse_query(query=user_input)
         except:
-            try:
-                time.sleep(5)
-                msg = ("We're having trouble submitting queries to the CCC Policy Assistant. We're going to try again, but if that "
-                       "doesn't work, please refresh this web page and try again. ")
-                st.markdown(msg)
-                st.markdown(traceback.format_exc())
-                st.session_state["bot"].stream_and_parse_query(query=user_input)
-
-            except:
-                msg = ("We're having trouble submitting queries to the CCC Policy Assistant. We're going to try again, but if that "
-                       "doesn't work, please refresh this web page and try again. ")
-                st.markdown(msg)
-                st.markdown(traceback.format_exc())
-                time.sleep(5)
-                st.rerun()
-
+            time.sleep(5)
+            msg = ("We're having trouble submitting queries to the CCC Policy Assistant. We're going to try again, but if that "
+                   "doesn't work, please refresh this web page and try again. ")
+            st.markdown(msg)
+            st.markdown(traceback.format_exc())
+            st.session_state["bot"].stream_and_parse_query(query=user_input)
 
     # Add agent results to session messages
     st.session_state.messages.append({"role": "assistant",
