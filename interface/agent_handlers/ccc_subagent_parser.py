@@ -42,7 +42,6 @@ class getSubAgentResults:
             # self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/59136133388304384"
             self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/1676772824544444416"
 
-
         elif rag_agent == "search":
             self.resource_name = "projects/eternal-bongo-435614-b9/locations/us-central1/reasoningEngines/8448585775179628544"
 
