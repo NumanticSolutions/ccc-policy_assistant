@@ -9,6 +9,7 @@
 import sys, os
 import json
 import time
+import traceback
 import streamlit as st
 import vertexai
 
@@ -92,12 +93,14 @@ if "bot" not in st.session_state:
             msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
                    "doesn't work, please refresh this web page and try again. ")
             st.markdown(msg)
+            traceback.print_exc()
             st.session_state["bot"] = cccChatBot(user_id=user_id)
 
         except:
             msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
                    "doesn't work, please refresh this web page and try again. ")
             st.markdown(msg)
+            traceback.print_exc()
             time.sleep(5)
             st.rerun()
 
@@ -233,12 +236,14 @@ if user_input:
                 msg = ("We're having trouble submitting queries to the CCC Policy Assistant. We're going to try again, but if that "
                        "doesn't work, please refresh this web page and try again. ")
                 st.markdown(msg)
+                traceback.print_exc()
                 st.session_state["bot"].stream_and_parse_query(query=user_input)
 
             except:
                 msg = ("We're having trouble submitting queries to the CCC Policy Assistant. We're going to try again, but if that "
                        "doesn't work, please refresh this web page and try again. ")
                 st.markdown(msg)
+                traceback.print_exc()
                 time.sleep(5)
                 st.rerun()
 
