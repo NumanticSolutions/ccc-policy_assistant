@@ -90,17 +90,18 @@ if "bot" not in st.session_state:
     except:
         try:
             time.sleep (5)
-            msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
+            msg = ("TRY BOT: We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
                    "doesn't work, please refresh this web page and try again. ")
             st.markdown(msg)
-            st.markdown(traceback.print_exc())
+            # st.markdown(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])
+            st.markdown(traceback.format_exc())
             st.session_state["bot"] = cccChatBot(user_id=user_id)
 
         except:
-            msg = ("We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
+            msg = ("EXCEPT BOT: We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
                    "doesn't work, please refresh this web page and try again. ")
             st.markdown(msg)
-            st.markdown(traceback.print_exc())
+            st.markdown(traceback.format_exc())
             time.sleep(5)
             st.rerun()
 
@@ -236,14 +237,14 @@ if user_input:
                 msg = ("We're having trouble submitting queries to the CCC Policy Assistant. We're going to try again, but if that "
                        "doesn't work, please refresh this web page and try again. ")
                 st.markdown(msg)
-                st.markdown(traceback.print_exc())
+                st.markdown(traceback.format_exc())
                 st.session_state["bot"].stream_and_parse_query(query=user_input)
 
             except:
                 msg = ("We're having trouble submitting queries to the CCC Policy Assistant. We're going to try again, but if that "
                        "doesn't work, please refresh this web page and try again. ")
                 st.markdown(msg)
-                st.markdown(traceback.print_exc())
+                st.markdown(traceback.format_exc())
                 time.sleep(5)
                 st.rerun()
 
