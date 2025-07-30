@@ -82,6 +82,9 @@ st.divider()
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
+if "questions" not in st.session_state:
+    st.session_state.questions = rq.generate_questions()
+
 if "bot" not in st.session_state:
     # Create a chatbot for this user
     user_id = "u_123"
@@ -157,8 +160,7 @@ with st.sidebar:
     tab1, tab2 = st.tabs(["Example Questions", "Useful Links"])
     with tab1:
         st.header("Example Questions")
-        questions = rq.generate_questions()
-        for question in questions:
+        for question in st.session_state.questions:
             st.text("• "+question)
     with tab2:
         links = ("- [CCC-Bot Analytics](https://eternal-bongo-435614-b9.uc.r.appspot.com/home)\n"
