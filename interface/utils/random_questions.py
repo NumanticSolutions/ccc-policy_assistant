@@ -5,7 +5,7 @@ import json, os, requests
 
 
 def generate_questions():
-   ''' Generate random questions, if unable to do so will return default questions. '''
+    """ Generate random questions, if unable to do so will return default questions. """
 
     project=os.environ["GOOGLE_CLOUD_PROJECT"]
     url = "https://" + project + ".uc.r.appspot.com/random_questions"

@@ -18,6 +18,7 @@ utils_path = "utils/"
 sys.path.insert(0, utils_path)
 from authentication import ApiAuthentication
 import response_logger as rl
+import random_questions as rq
 
 # Import chatbot
 chatbot_path = "agent_handlers/"
@@ -156,13 +157,11 @@ with st.sidebar:
     tab1, tab2 = st.tabs(["Example Questions", "Useful Links"])
     with tab1:
         st.header("Example Questions")
-        st.text("• How many districts are there in the California community college system?")
-        st.text("• What is the part-time enrollment of Foothill College?")
-        st.text("• What college is designated a Center of Excellence in bioprocessing?")
-        st.text("• How many California community colleges partner with the California Department of Corrections and Rehabilitation (CDCR) to provide in‑person courses?")
-        st.text("• What are the responsibilities of the board members of a California community college?")
+        questions = rq.generate_questions()
+        for question in questions:
+            st.text("• "+question)
     with tab2:
-        links = ("- [C3PA Studio](https://c3pa-studio-1062597788108.us-central1.run.app/)\n"
+        links = ("- [CCC-Bot Analytics](https://eternal-bongo-435614-b9.uc.r.appspot.com/home)\n"
                  "- [GitHub](https://github.com/NumanticSolutions/ccc-policy_assistant)\n"
                  "- [Numantic Solutions](https://numanticsolutions.com)\n\n"
                  "- [Terms of Use](https://numanticsolutions.com/#terms)\n"
