@@ -185,7 +185,7 @@ with st.sidebar:
 
         st.text("\n")
         ### ??? st.session_state["bot"].version
-        version_msg = ("Version : " + "ADK Jun 27, 2025")
+        version_msg = ("Version : " + "ADK July 31, 2025")
         st.markdown(version_msg)
 
 # Reset button
