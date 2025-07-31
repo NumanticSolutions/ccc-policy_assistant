@@ -54,13 +54,24 @@ font_url = ("https://fonts.googleapis.com/css2?family=Lato:ital,wght"
 streamlit_style = """
 			<style>
 			@import url({font_url});
-
 			html, body, [class*="css"]  {{
 			font-family: 'Roboto', sans-serif;
 			}}
 			</style>
 			"""
 st.markdown(streamlit_style, unsafe_allow_html=True)
+
+st.markdown(
+    """
+    <style>
+    /* Target the container that holds the chat input */
+    .stBottom {
+        padding-bottom: 50px; /* Adjust this value to increase or decrease the margin */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 images_path = "data/images"
 logo_file = "Numantic Solutions_Logotype_light.png"
@@ -279,7 +290,6 @@ if user_input:
     #
     #######################
 
-
 # Option to clear chat history
 if reset_button:
     st.session_state.messages = []
@@ -289,4 +299,3 @@ if reset_button:
     st.rerun()
     st.cache_data.clear()
     # rest_button = False
-
