@@ -82,8 +82,12 @@ bot_summary = ("This an experimental chatbot employing Artificial Intelligence t
                "to California's community colleges. "
                "The bot's target audience are stakeholders who would like to participate "
                "in community college decision making and would benefit from curated and detailed "
-               "information related to community colleges. Some examples might include board members, "
-               "administrators, staff, students, community activists or legislators. \n")
+               "information related to community colleges. "
+               "Note that all chat content is logged for evaluation purposes. Please do "
+               "not provide confidential, proprietary or other resctricted data. Thank you.\n")
+
+# Some examples might include board members,
+# administrators, staff, students, community activists or legislators.
 
 st.text(bot_summary)
 st.divider()
@@ -174,7 +178,8 @@ with st.sidebar:
         for question in st.session_state.questions:
             st.text("• "+question)
     with tab2:
-        links = ("- [CCC-Bot Analytics](https://eternal-bongo-435614-b9.uc.r.appspot.com/home)\n"
+        links = ("- [Example Reports](https://eternal-bongo-435614-b9.uc.r.appspot.com/example_reports)\n"
+                 "- [CCC-Bot Analytics](https://eternal-bongo-435614-b9.uc.r.appspot.com/home)\n"
                  "- [GitHub](https://github.com/NumanticSolutions/ccc-policy_assistant)\n"
                  "- [Numantic Solutions](https://numanticsolutions.com)\n\n"
                  "- [Terms of Use](https://numanticsolutions.com/#terms)\n"
