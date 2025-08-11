@@ -1,7 +1,6 @@
-<img src="./data/images/Numantic Solutions_Logomark_orange.png" alt="NS" style="float:left;width:70px;height:40px;">  <h1>Community College Policy Assistant V2</h1>
 
 <div style="text-align: center;">
-<img src="./data/images/ccc_policy_assistant_v2_banner.png" alt="NS" style="float:left;width="900";height="450">
+<img src="./data/images/ccc_policy_assistant_v2_banner.png" alt="Numantic Solutions" width="900" height="300">
 </div> 
 
 
