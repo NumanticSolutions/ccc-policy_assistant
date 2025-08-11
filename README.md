@@ -46,14 +46,14 @@ Although this tool is underdevelopment and its technological components are like
 - Document & Vector Storage: [Google Cloud Storage](https://cloud.google.com/?hl=en)
 - User Interface: [Google Cloud Run](https://cloud.google.com/?hl=en) and [Streamlit](https://streamlit.io)
 
-## Quick Start
+### Quick Start
 
 1. Ensure your environment has all the necessary files. We use [Anaconda](https://www.anaconda.com/) to create virtual environments. In this repo, the Conda configuration file can be found in `data\environment\environment_adk.yml`.
 2. To see the bot in action on a local machine, run the following command line script: `streamlit run app.py` from the `interface` directory.
 
 ## What's Next?
 
-This repo is still under development and we still need to add the code for 
+This repo is still under development, and we still need to add the code used in the following steps: 
 
 1. Ingesting web data
 2. Creating and deploying ADK agents
