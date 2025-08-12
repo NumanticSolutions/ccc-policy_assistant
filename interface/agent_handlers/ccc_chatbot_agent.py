@@ -14,7 +14,7 @@ from ccc_subagent_parser import getSubAgentResults
 
 class cccChatBot:
     '''
-    Class to synthesize input of searchs and respond to a user's query
+    Class to synthesize input of searches and respond to a user's query
     '''
 
     def __init__(self,
@@ -34,8 +34,8 @@ class cccChatBot:
         # Users's query
         self.user_id = user_id
 
-        # Synthesis agent resouce
-        self.synthesis_resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/3177122411342462976"
+        # Synthesis agent resource
+        self.synthesis_resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/2295841851447443456"
 
         # Authenticate
         ########### Adjust for production deployments

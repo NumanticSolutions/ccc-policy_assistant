@@ -36,14 +36,13 @@ class getSubAgentResults:
 
         # Get the agent resource name
         if rag_agent == "rag_webtext":
-            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/7423647424045907968"
+            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/5286232004021452800"
 
         elif rag_agent == "rag_ipeds":
-            # self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/59136133388304384"
-            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/1676772824544444416"
+            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/3448763356054290432"
 
         elif rag_agent == "search":
-            self.resource_name = "projects/eternal-bongo-435614-b9/locations/us-central1/reasoningEngines/8448585775179628544"
+            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/1471683119638642688"
 
         # Users's query
         self.query = query

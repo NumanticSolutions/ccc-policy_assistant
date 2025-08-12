@@ -258,10 +258,10 @@ if user_input:
     rlog_params = {"query": user_input,
                    "response": json.dumps(st.session_state["bot"].report_dict),
                    "app": "ccc_policy_assist",
-                   "version": "2507",
-                   "ai": "gemini-2.0-flash-001",
+                   "version": "2508",
+                   "ai": "gemini-2.5-flash",
                    "agent": "synthesis",
-                   "comments": "testing ccc streamlit app"}
+                   "comments": "production ccc streamlit app"}
 
     bq_logger = rl.ResponseLogger()
     bq_logger.response_to_bq(rlog_params=rlog_params)
