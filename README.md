@@ -25,9 +25,8 @@ Aug 12, 2025
 ## Contact
 
 Please reach out to Steve or Nathan
-- [Numantic Solutions - numanticsolutions.com](https://numanticsolutions.com/) 
-- [Numantic Solutions](https://numanticsolutions.com){:target="_blank" rel="noopener"}  
-
+- [Numantic Solutions](https://numanticsolutions.com/)
+- <a href="https://numanticsolutions.com/" target="_blank" rel="nopener">Numantic Solutions </a>
 
 ## Workflow Architecture
 
