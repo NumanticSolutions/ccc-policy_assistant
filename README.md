@@ -20,12 +20,13 @@ By making this tool available, we hope to demonstrate how policy advocacy can be
 
 If you want to learn more or have thoughts about this application or similar tools or the underlying technology, please reach out.
 
-Aug 11, 2025
+Aug 12, 2025
 
 ## Contact
 
 Please reach out to Steve or Nathan
-- [Numantic Solutions - numanticsolutions.com](https://numanticsolutions.com/)  
+- [Numantic Solutions - numanticsolutions.com](https://numanticsolutions.com/) 
+- [Numantic Solutions](https://numanticsolutions.com){:target="_blank" rel="noopener"}  
 
 
 ## Workflow Architecture
