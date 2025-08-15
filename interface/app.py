@@ -27,9 +27,6 @@ from ccc_chatbot_agent import cccChatBot
 from ccc_datascience_agent import cccDataScienceBot
 
 if "GOOGLE_API_KEY" not in os.environ.keys():
-    utils_path = "../Utilities/osa_tools"
-    sys.path.insert(0, utils_path)
-    from authentication import ApiAuthentication
     api_configs = ApiAuthentication(client="CCC")
 
 # Initialize Vertex AI

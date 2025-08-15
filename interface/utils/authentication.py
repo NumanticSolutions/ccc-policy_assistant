@@ -40,11 +40,15 @@ class ApiAuthentication:
         # Update any key word args
         self.__dict__.update(kwargs)
 
+        # Set up error message
+        self.error_message = None
+
         # Get the database configuration
         self.__get_api_creds__()
 
-        # Set environment variables
-        self.set_environ_variables()
+        # Set environment variables - unless it has some error message
+        if self.error_message == None:
+            self.set_environ_variables()
 
     def __get_api_creds__(self):
         '''
@@ -54,10 +58,17 @@ class ApiAuthentication:
 
         self.apis_configs = {}
 
+        # check if dotenv_path - if not return None
+        if not os.path.exists(self.dotenv_path):
+            msg = "The dotenv_path ({}) path could not be found.".format(self.dotenv_path)
+            self.error_message
+            return None
+
         # check if .env in the directory
         if ".env" not in os.listdir(self.dotenv_path):
-            msg = "No .env file found in dotenv_path directory: {}".format(self.dotenv_path)
-            raise ValueError(msg)
+            msg = "No .env file found in dotenv_path directory: {}.".format(self.dotenv_path)
+            self.error_message
+            return None
 
         # Get the dotenv configuration file
         if self.cred_source == "dotenv":
