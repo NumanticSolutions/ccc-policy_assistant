@@ -208,8 +208,8 @@ pydantic-settings==2.10.1
 pydata-google-auth==1.9.1
 pydeck==0.9.1
 Pygments==2.19.2
-pyobjc-core==11.1
-pyobjc-framework-Cocoa==11.1
+# pyobjc-core==11.1
+# pyobjc-framework-Cocoa==11.1
 pyparsing==3.2.3
 pypdf==5.9.0
 PySocks==1.7.1
