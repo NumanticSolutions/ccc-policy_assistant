@@ -61,13 +61,13 @@ class ApiAuthentication:
         # check if dotenv_path - if not return None
         if not os.path.exists(self.dotenv_path):
             msg = "The dotenv_path ({}) path could not be found.".format(self.dotenv_path)
-            self.error_message
+            self.error_message = msg
             return None
 
         # check if .env in the directory
         if ".env" not in os.listdir(self.dotenv_path):
             msg = "No .env file found in dotenv_path directory: {}.".format(self.dotenv_path)
-            self.error_message
+            self.error_message = msg
             return None
 
         # Get the dotenv configuration file
