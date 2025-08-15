@@ -271,7 +271,16 @@ if user_input:
     st.session_state["ds_bot"].search_ipeds_metadata(query=user_input)
 
     # Format and display IPEDS metadata findings
-    format_agent_output(report_dict=st.session_state["ds_bot"].report_dict)
+    if type(st.session_state["ds_bot"].report_dict) == dict and \
+        len(st.session_state["ds_bot"].report_dict) > 0:
+        format_agent_output(report_dict=st.session_state["ds_bot"].report_dict)
+    else:
+        no_ipeds_msg = ("Our search of the Integrated Postsecondary Education Data System (IPEDS) "
+                        "did not find data relevant to your query.")
+        report_dict = dict(relevant_data_yes_or_no=False,
+                           description_of_relevant_data=no_ipeds_msg)
+        print(report_dict)
+        format_agent_output(report_dict=report_dict)
 
     # Add IPEDS
     st.session_state.messages.append({"role": "data_assistant",
