@@ -56,6 +56,4 @@ Although this tool is underdevelopment and its technological components are like
 This repo is still under development, and we still need to add the code used in the following steps: 
 
 1. Ingesting web data
-2. Creating and deploying ADK agents
-3. Deploying the Streamlit application to GCP
 
