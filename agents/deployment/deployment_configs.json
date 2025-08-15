@@ -17,6 +17,11 @@
     "synthesis": {
         "display_name": "Synthesis Agent",
         "description":  "An agent to synthesize content into a research report format to provide to the user"
+    },
+
+    "synthesis_ipeds": {
+        "display_name": "Synthesis IPEDS Agent",
+        "description":  "An agent to synthesize IPEDS metadata search results"
     }
 }
 

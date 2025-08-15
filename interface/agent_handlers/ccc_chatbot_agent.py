@@ -35,7 +35,7 @@ class cccChatBot:
         self.user_id = user_id
 
         # Synthesis agent resource
-        self.synthesis_resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/2295841851447443456"
+        self.synthesis_resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/8813957887136104448"
 
         # Authenticate
         ########### Adjust for production deployments
@@ -50,7 +50,7 @@ class cccChatBot:
 
     def authenticate(self):
         '''
-        Authenticate with Google AI servvices
+        Authenticate with Google AI services
         '''
 
         # Import authentication object
@@ -72,12 +72,6 @@ class cccChatBot:
 
         # # Authenticate
         # self.authenticate()
-        #
-        # # Retrieve agent
-        # self.agent_engine = agent_engines.get(self.synthesis_resource_name)
-        #
-        # # Establish session
-        # self.session = self.agent_engine.create_session(user_id=self.user_id)
 
         ### Step 1. Get RAG Vertex AI search results of web text
         self.va_results = getSubAgentResults(query=query,
@@ -106,10 +100,6 @@ class cccChatBot:
         # Step 5. Parse response
         self.parse_synthesis_response()
 
-        # Step 6. Call the IPEDS search
-        self.ip_results = getSubAgentResults(query=query,
-                                             rag_agent="rag_ipeds",
-                                             user_id=self.user_id)
 
     def parse_synthesis_response(self):
         '''
@@ -153,35 +143,6 @@ class cccChatBot:
         # Add these to report dictionary
         self.report_dict["reference_uris"] = ref_uris
 
-    def parse_ipeds_search_results(self):
-        '''
-        Method to parse the IPEDS rag agent to determine if there are relevant IPEDS to query
-        '''
-
-
-        try:
-            res_text = self.ip_results.contents[0]
-            res_text = res_text[res_text.find("{"): res_text.rfind("}") + 1]
-
-            self.ipeds_report_dict = json.loads(res_text)
-
-        except:
-            self.ipeds_report_dict = dict(relevant_data_yes_or_no=False)
-
-        if self.ipeds_report_dict["relevant_data_yes_or_no"] == True:
-            msg = ("I did a search of the Integrated Postsecondary Education Data System (IPEDS) "
-                   "datasets from the U.S. Department of Education and found data relevant to "
-                   "your query. \n\n"
-                   "Here's are my findings: {}").format(self.ipeds_report_dict["description_of_relevant_data"])
-
-            self.ipeds_result = msg
-
-        else:
-            msg = ("I did a search of the Integrated Postsecondary Education Data System (IPEDS) "
-                   "datasets from the U.S. Department of Education but did not find data relevant to "
-                   "your query. ")
-
-            self.ipeds_result = msg
 
 
 

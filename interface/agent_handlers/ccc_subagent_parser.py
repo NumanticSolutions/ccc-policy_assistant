@@ -14,11 +14,11 @@ from vertexai import agent_engines
 utils_path = "../utils/"
 sys.path.insert(0, utils_path)
 import text_cleaning_tools as tct
-
+import json_tools as jt
 
 class getSubAgentResults:
     '''
-    Class to read and parse Google AI Search agent App results
+    Class to read and parse responses from multiple Google ADK agents
 
     '''
 
@@ -34,15 +34,22 @@ class getSubAgentResults:
         # Update any key word args
         self.__dict__.update(kwargs)
 
+        # Validate inputs
+        self.rag_agent = rag_agent
+        rag_agents = ["rag_webtext", "rag_ipeds", "search"]
+        if self.rag_agent not in rag_agents:
+            msg = "The input parameter rag_agent must be in {}".format(rag_agents)
+            raise ValueError(msg)
+
         # Get the agent resource name
-        if rag_agent == "rag_webtext":
-            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/5286232004021452800"
+        if self.rag_agent == "rag_webtext":
+            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/1783838868810760192"
 
-        elif rag_agent == "rag_ipeds":
-            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/3448763356054290432"
+        elif self.rag_agent == "rag_ipeds":
+            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/1669278553289523200"
 
-        elif rag_agent == "search":
-            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/1471683119638642688"
+        elif self.rag_agent == "search":
+            self.resource_name = "projects/1062597788108/locations/us-central1/reasoningEngines/4903988985648381952"
 
         # Users's query
         self.query = query
@@ -181,13 +188,16 @@ class getSubAgentResults:
             for gc in event["grounding_metadata"]["grounding_chunks"]:
                 for key in gc.keys():
                     if key == "web":
-                        self.domains.append(gc["web"]["domain"])
-                        self.uris.append(dict(uri_index=uri_index,
-                                              uri=gc["web"]["uri"],
-                                              uri_text=gc["web"]["domain"])
-                                         )
-                        uri_index += 1
+                        if "domain" in gc["web"].keys() and "uri" in gc["web"].keys():
+                            self.domains.append(gc["web"]["domain"])
+                            self.uris.append(dict(uri_index=uri_index,
+                                                  uri=gc["web"]["uri"],
+                                                  uri_text=gc["web"]["domain"])
+                                             )
+                            uri_index += 1
 
         self.domains = list(set(self.domains))
+
+
 
 

@@ -49,6 +49,7 @@ from ccc_chatbot.agent import rag_agent
 from ccc_chatbot.agent import rag_ipeds_agent
 from ccc_chatbot.agent import search_agent
 from ccc_chatbot.agent import synthesis_agent
+from ccc_chatbot.agent import synthesis_ipeds_agent
 
 ### Step 4. Read deployment parameters
 deploy_configs_file = "deployment_configs.json"
@@ -60,6 +61,7 @@ deploy_configs["rag"]["agent"] = rag_agent
 deploy_configs["rag_ipeds"]["agent"] = rag_ipeds_agent
 deploy_configs["search"]["agent"] = search_agent
 deploy_configs["synthesis"]["agent"] = synthesis_agent
+deploy_configs["synthesis_ipeds"]["agent"] = synthesis_ipeds_agent
 
 # Initialize Vertex AI API once per session
 vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
@@ -146,7 +148,7 @@ def main():
 
     # Take action depending on command line inputs
     if args.action == "deploy":
-        if args.resource_id not in ["rag", "rag_ipeds", "search", "synthesis", "data_science"]:
+        if args.resource_id not in ["rag", "rag_ipeds", "search", "synthesis", "synthesis_ipeds"]:
             msg = ("Agent ID is required for deploying an agent; currently 'rag', "
                    "'search', 'data_science', 'synthesis'.")
             raise Exception(msg)

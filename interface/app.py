@@ -24,23 +24,13 @@ import random_questions as rq
 chatbot_path = "agent_handlers/"
 sys.path.insert(0, chatbot_path)
 from ccc_chatbot_agent import cccChatBot
+from ccc_datascience_agent import cccDataScienceBot
 
-# Initialize Vertex AI API once per session
-# try:
-#     # Get get credentials and set envirvonment variables
-#     api_configs = ApiAuthentication(client="CCC")
-#
-# except:
-#     pass
-#
-# # Check that we have necessary environment variables
-# req_env_vars = ["GOOGLE_CLOUD_PROJECT", "GOOGLE_CLOUD_LOCATION",
-#                 "STAGING_BUCKET", "GOOGLE_APPLICATION_CREDENTIALS"]
-# for rqv in req_env_vars:
-#     if rqv not in os.environ:
-#         msg = ("The following environment variables are required but seem to be missing; "
-#                "Please review: {}").format(req_env_vars)
-#         raise ValueError(msg)
+if "GOOGLE_API_KEY" not in os.environ.keys():
+    utils_path = "../Utilities/osa_tools"
+    sys.path.insert(0, utils_path)
+    from authentication import ApiAuthentication
+    api_configs = ApiAuthentication(client="CCC")
 
 # Initialize Vertex AI
 vertexai.init(project=os.environ["GOOGLE_CLOUD_PROJECT"],
@@ -77,19 +67,20 @@ images_path = "data/images"
 logo_file = "Numantic Solutions_Logotype_light.png"
 st.image(os.path.join(images_path, logo_file), width=600)
 st.title("California Community College Policy Assistant")
-bot_summary = ("This an experimental chatbot employing Artificial Intelligence tools "
-               "to help users easily improve their understanding of policy topics related "
-               "to California's community colleges. "
-               "The bot's target audience are stakeholders who would like to participate "
-               "in community college decision making and would benefit from curated and detailed "
-               "information related to community colleges. "
-               "Note that all chat content is logged for evaluation purposes. Please do "
-               "not provide confidential, proprietary or other resctricted data. Thank you.\n")
-
+bot_summary = ("This an experimental chatbot employing Artificial Intelligence "
+               "to help users improve their understanding of  "
+               "California community college policy topics. \n "
+               "\nThe target audience are stakeholders "
+               "in the community college decision making process who would benefit from more relevant "
+               "and thorough information. \n"
+               )
+example_qs = "- [Example Queries and Responses](https://eternal-bongo-435614-b9.uc.r.appspot.com/example_reports) \n"
 # Some examples might include board members,
 # administrators, staff, students, community activists or legislators.
 
-st.text(bot_summary)
+# st.text(bot_summary)
+st.markdown(bot_summary)
+st.markdown(example_qs)
 st.divider()
 
 ########## Handle conversations in Streamlit
@@ -104,7 +95,11 @@ if "bot" not in st.session_state:
     # Create a chatbot for this user
     user_id = "u_123"
     try:
+        # Synthesis chatbot
         st.session_state["bot"] = cccChatBot(user_id=user_id)
+        #Data science chatbot
+        st.session_state["ds_bot"] = cccDataScienceBot(user_id=user_id)
+
     except:
         time.sleep (5)
         msg = ("TRY BOT: We're having trouble starting the CCC Policy Assistant. We're going to try again, but if that "
@@ -112,7 +107,7 @@ if "bot" not in st.session_state:
         st.markdown(msg)
         st.markdown(traceback.format_exc())
         st.session_state["bot"] = cccChatBot(user_id=user_id)
-
+        st.session_state["ds_bot"] = cccChatBot(user_id=user_id)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -124,8 +119,12 @@ def format_agent_output(report_dict: dict):
     """
     # Display results
     for key in report_dict.keys():
+
+        # remove markdown
+
         if key == "report_title":
-            st.markdown("## {}\n\n".format(report_dict[key]))
+            title_text = report_dict[key].replace("#","")
+            st.markdown("## {}\n\n".format(title_text))
 
         elif key == "report_executive_summary":
             st.markdown("### Summary: \n{}\n".format(report_dict[key]))
@@ -142,39 +141,44 @@ def format_agent_output(report_dict: dict):
             st.markdown("### Reference URLs \n")
             st.markdown(" ".join(ref_uris_md))
 
-        elif key == "relevant_data_yes_or_no" and report_dict["relevant_data_yes_or_no"] == True:
-            msg = ("I did a search of the Integrated Postsecondary Education Data System (IPEDS) "
-                   "datasets from the U.S. Department of Education and found data relevant to "
-                   "your query. \n\nHere's are my findings: {}").format(report_dict["description_of_relevant_data"])
-            st.markdown(msg)
+        elif key == "relevant_data_yes_or_no":
+            st.markdown("### IPEDS metadata search results:")
+            st.markdown(report_dict["description_of_relevant_data"])
 
-        elif key == "relevant_data_yes_or_no" and report_dict["relevant_data_yes_or_no"] == False:
-            msg = ("I did a search of the Integrated Postsecondary Education Data System (IPEDS) "
-                   "datasets from the U.S. Department of Education but did not find data relevant to "
-                   "your query. ")
-            st.markdown(msg)
+            # Look for tables
+            if "relevant_table_names" in report_dict.keys():
+                if type(report_dict["relevant_table_names"]) == list \
+                        and len(report_dict["relevant_table_names"]) > 0:
+                    tables_listing = ", ".join(report_dict["relevant_table_names"])
 
+                elif type(report_dict["relevant_table_names"]) == str \
+                        and len(report_dict["relevant_table_names"]) > 0:
+                    tables_listing = ", ".join(report_dict["relevant_table_names"])
+
+                st.markdown("Relevant tables: {}".format(tables_listing))
 
 with st.sidebar:
-    sidebar_msg = ("Overview")
+    sidebar_msg = ("Objectives")
 
     st.header(sidebar_msg)
     st.text("\n\n\n")
 
-    invite = ("By making this tool available, we hope to demonstrate "
-              "how policy advocacy can be supported through the use of technology. ")
-    invite2 = ("If you want to learn more or have thoughts about this application, similar "
-              "tools or the underlying technology, please reach out to Steve or Nathan at "
-              ":primary[info@numanticsolutions.com] ")
+    invite = ("- We hope to demonstrate "
+              "how policy advocacy can be advanced through technology. ")
+    invite2 = ("- Chats are logged for evaluation purposes. Please don't "
+               "provide confidential, proprietary or restricted data.")
+    invite3 = ("- To learn more or share your thoughts, please contact Steve or Nathan at "
+               "[Numantic Solutuons](https://numanticsolutions.com/#contactus)")
 
     st.markdown(invite)
     st.markdown(invite2)
+    st.markdown(invite3)
     st.text("\n\n\n")
 
 
     tab1, tab2 = st.tabs(["Example Questions", "Useful Links"])
     with tab1:
-        st.header("Example Questions")
+        st.header("Example Queries")
         for question in st.session_state.questions:
             st.text("• "+question)
     with tab2:
@@ -182,7 +186,7 @@ with st.sidebar:
                  "- [CCC-Bot Analytics](https://eternal-bongo-435614-b9.uc.r.appspot.com/home)\n"
                  "- [GitHub](https://github.com/NumanticSolutions/ccc-policy_assistant)\n"
                  "- [Numantic Solutions](https://numanticsolutions.com)\n\n"
-                 "- [Terms of Use](https://numanticsolutions.com/#terms)\n"
+                 "- [Terms of Use](https://numanticsolutions.com/#termsofservice)\n"
                  "- [Privacy Policy](https://numanticsolutions.com/#privacy)\n"
                  )
         st.text("\n")
@@ -190,7 +194,7 @@ with st.sidebar:
 
         st.text("\n")
         ### ??? st.session_state["bot"].version
-        version_msg = ("Version deployed : " + "July 31, 2025")
+        version_msg = ("Version deployed : " + "Aug 15, 2025")
         st.markdown(version_msg)
 
 # Reset button
@@ -202,6 +206,11 @@ chat_placeholder = st.empty()
 
 # Input box for user's query
 user_input = st.chat_input("Your message")
+
+dsa_msg = ("This is an experimental data science agent using the "
+           "Integrated Postsecondary Education Data System (IPEDS) datasets from the U.S. Department "
+           "of Education. We're now checking to see if any IPEDS data would be useful in answering "
+           "your query.")
 
 ######## Chat stuff
 if user_input:
@@ -219,9 +228,8 @@ if user_input:
 
                 elif message["role"] == "data_assistant":
                     st.markdown("### Data Analysis Assistant")
-                    st.markdown(
-                        "Here's what my search of the IPEDS data found; Do you want me to run an IPEDS query?")
-                    st.markdown(message["content"])
+                    st.markdown(dsa_msg)
+                    format_agent_output(report_dict=message["content"])
 
                 else:
                     format_agent_output(report_dict=message["content"])
@@ -253,7 +261,24 @@ if user_input:
     # Display report results
     format_agent_output(report_dict=st.session_state["bot"].report_dict)
 
-    # Add to BigQuery
+
+    ## Data Science Agent
+    # Display IPEDS search results
+    st.markdown("## Data Analysis Assistant")
+    st.markdown(dsa_msg)
+
+    # Check IPEDS data
+    st.session_state["ds_bot"].search_ipeds_metadata(query=user_input)
+
+    # Format and display IPEDS metadata findings
+    format_agent_output(report_dict=st.session_state["ds_bot"].report_dict)
+
+    # Add IPEDS
+    st.session_state.messages.append({"role": "data_assistant",
+                                      "content": st.session_state["ds_bot"].report_dict})
+
+
+    # Add Chatbot BigQuery
     # Create response logger object parameters
     rlog_params = {"query": user_input,
                    "response": json.dumps(st.session_state["bot"].report_dict),
@@ -266,34 +291,20 @@ if user_input:
     bq_logger = rl.ResponseLogger()
     bq_logger.response_to_bq(rlog_params=rlog_params)
 
-    ################################ Data Agent
-    # # Display IPEDS search results
-    # st.markdown("### Data Analysis Assistant")
-    #
-    # # Parse IPEDS
-    # st.session_state["bot"].parse_ipeds_search_results()
-    #
-    # # Format and display IPEDS repot Dict
-    # format_agent_output(report_dict=st.session_state["bot"].ipeds_report_dict)
-    #
-    # # Add IPEDS
-    # st.session_state.messages.append({"role": "data_assistant",
-    #                                   "content": st.session_state["bot"].ipeds_result})
-    #
-    # # Add to BigQuery
-    # # Create response logger object parameters
-    # rlog_params = {"query": user_input,
-    #                "response": st.session_state["bot"].ip_results.contents[0],
-    #                "app": "ccc_policy_assist",
-    #                "version": "2507",
-    #                "ai": "gemini-2.0-flash-001",
-    #                "agent": "rag_ipeds",
-    #                "comments": "testing ccc streamlit app"}
-    #
-    # bq_logger = rl.ResponseLogger()
-    # bq_logger.response_to_bq(rlog_params=rlog_params)
-    #
-    #######################
+
+    # Add DataScience agent BigQuery
+    # Create response logger object parameters
+    rlog_params = {"query": user_input,
+                   "response": json.dumps(st.session_state["ds_bot"].report_dict),
+                   "app": "ccc_policy_assist",
+                   "version": "2508",
+                   "ai": "gemini-2.5-flash",
+                   "agent": "rag_ipeds",
+                   "comments": "production ccc streamlit app"}
+
+    bq_logger = rl.ResponseLogger()
+    bq_logger.response_to_bq(rlog_params=rlog_params)
+
 
 # Option to clear chat history
 if reset_button:

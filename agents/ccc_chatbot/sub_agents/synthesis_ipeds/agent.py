@@ -3,6 +3,7 @@
 # Steve Godfrey
 # August 2025
 
+import os, sys
 
 from google.adk.agents import Agent
 
@@ -16,8 +17,8 @@ from . import prompt
 #     api_configs = ApiAuthentication(client="CCC")
 
 root_agent = Agent(
-    name=prompt.synthesis_agent_name,
-    model=prompt.synthesis_model_name,
-    description=prompt.synthesis_agent_description,
-    instruction=prompt.synthesis_agent_instruction
+    name=prompt.synthesis_ipeds_agent_name,
+    model=prompt.synthesis_ipeds_model_name,
+    description=prompt.synthesis_ipeds_agent_description,
+    instruction=prompt.synthesis_ipeds_agent_instruction
 )
