@@ -14,11 +14,11 @@ from vertexai import agent_engines
 from vertexai.preview.reasoning_engines import AdkApp
 
 #### Step 1. Add utils by copying required utility files
-utils_to_copy = ["../../../Utilities/osa_tools/authentication.py",
-                 "../../../Utilities/osa_tools/os_tools.py",
-                 # "../../../../../Utilities/google_tools/gcp_tools.py",
-                 # "../../../../../Utilities/logging/response_logger.py",
-                 # "../../../../../Utilities/text_cleaning/text_cleaning_tools.py"
+utils_to_copy = ["../../../utilities/osa_tools/authentication.py",
+                 "../../../utilities/osa_tools/os_tools.py",
+                 # "../../../../../utilities/google_tools/gcp_tools.py",
+                 # "../../../../../utilities/logging/response_logger.py",
+                 # "../../../../../utilities/text_cleaning/text_cleaning_tools.py"
                  ]
 
 utils_path =  os.path.abspath(os.path.join(os.path.dirname(__file__), "utils"))

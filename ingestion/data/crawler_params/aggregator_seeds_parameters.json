@@ -1,0 +1,156 @@
+[
+    {
+    "seed_url":        "https://numanticsolutions.com",
+    "storage_folder":  "numantic",
+    "organization":    "Numantic Solutions",
+    "about":           "Numantic Solutions is a full-stack data consultancy.",
+    "crawl_urls":      "",
+    "dont_crawl_urls": "",
+    "crawl_depth":     1,
+    "crawl_width":     1
+    },
+
+    {
+    "seed_url":        "https://en.wikipedia.org/wiki/California_Community_Colleges",
+    "storage_folder":  "wikipedia",
+    "organization":    "Wikiepedia",
+    "about":           "Wikipedia is a free online encyclopedia that anyone can edit, and millions already have.",
+    "crawl_urls":      "",
+    "dont_crawl_urls": "",
+    "crawl_depth":     1,
+    "crawl_width":     1
+    },
+
+    {
+    "seed_url":        "https://www.cccco.edu",
+    "storage_folder":  "cccco",
+    "organization":    "California Community Colleges",
+    "about":           "Informational site for all California community colleges.",
+    "crawl_urls":      "",
+    "dont_crawl_urls": "",
+    "crawl_depth":     1,
+    "crawl_width":     1
+    },
+
+    {
+    "seed_url": "https://www.ccleague.org",
+    "storage_folder": "ccleague",
+    "organization": "Community College League of California",
+    "about": "The Community College League of California is made up of a small, but mighty team that is dedicated to serving our members – California’s 73 community college districts.",
+    "crawl_urls":"",
+    "dont_crawl_urls": "",
+    "crawl_depth": 1,
+    "crawl_width": 1
+    },
+
+    {
+    "seed_url": "https://cccaoe.org/",
+    "storage_folder": "cccaoe",
+    "organization": "California Community College Association For Occupational Education",
+    "about": "CCCAOE is a state-wide, membership-driven organization of career educators, faculty, staff, and administrators. Together we create a greater voice and impact in shaping career education throughout our state.",
+    "crawl_urls": "",
+    "dont_crawl_urls": "",
+    "crawl_depth": 1,
+    "crawl_width": 1
+
+    },
+
+    {
+    "seed_url": "https://lao.ca.gov/Publications/",
+    "storage_folder": "lao",
+    "organization": "Legislative Analyst's Office",
+    "about": "The California Legislature's nonpartisan fiscal and policy advisor.",
+    "crawl_urls": "",
+    "dont_crawl_urls": "",
+    "crawl_depth": 1,
+    "crawl_width": 1
+    },
+
+    {
+    "seed_url": "https://ccrc.tc.columbia.edu/",
+    "storage_folder": "columbia",
+    "organization": "Community College Research Center, Columbia University",
+    "about": "The Community College Research Center (CCRC) is an independent organization in the field of community college research and reform.",
+    "crawl_urls": "",
+    "dont_crawl_urls": "",
+    "crawl_depth": 1,
+    "crawl_width": 1
+    },
+
+    {
+    "seed_url": "https://nscresearchcenter.org/",
+    "storage_folder": "nsc",
+    "organization": "National Student Clearinghouse Research Center",
+    "about": "The National Student Clearinghouse Research Center publishes relevant, objective data on postsecondary metrics to serve the community.",
+    "crawl_urls": "",
+    "dont_crawl_urls": "",
+    "crawl_depth": 1,
+    "crawl_width": 1
+    },
+
+    {
+    "seed_url": "https://www.aacc.nche.edu/",
+    "storage_folder": "aacc",
+    "organization": "American Association of Community Colleges",
+    "about": "The American Association of Community Colleges (AACC) is the primary advocacy organization for the nation’s community colleges.",
+    "crawl_urls": "",
+    "dont_crawl_urls": "",
+    "crawl_depth": 1,
+    "crawl_width":  1
+    },
+
+    {
+    "seed_url": "https://www.ecs.org/",
+    "storage_folder": "ecs",
+    "organization": "Education Commission of the States",
+    "about": "Education Commission of the States is the essential, indispensable member of any team addressing education policy at the state level. ",
+    "crawl_urls": "",
+    "dont_crawl_urls": "",
+    "crawl_depth": 1,
+    "crawl_width": 1
+    },
+
+    {
+        "seed_url": "https://nces.ed.gov/ipeds",
+     "storage_folder": "ipeds",
+     "organization": "Integrated Postsecondary Education Data System",
+     "about": "IES is the independent research, statistics, and evaluation arem of the U.S. Department of Education.IPEDS is a system of 12 interrelated survey components conducted annually postsecondary institutions participating in federal student financial aid programs.",
+     "crawl_urls": "",
+     "dont_crawl_urls": "",
+     "crawl_depth": 1,
+     "crawl_width": 1
+    },
+
+    {
+        "seed_url": "https://calmatters.digitaldemocracy.org/",
+     "storage_folder": "calmatters",
+     "organization": "Digital Democracy CalMatters",
+     "about": "Digital Democracy is a CalMatters project using technology and data to increase transparency, accountability and understanding about California state legislators and the decisions they make about state policy.",
+     "crawl_urls": "",
+     "dont_crawl_urls": "",
+     "crawl_depth": 1,
+     "crawl_width": 1
+    },
+
+    {
+    "seed_url": "https://icangotocollege.com/",
+    "storage_folder": "ican",
+    "organization": "California Community Colleges",
+    "about": "A California community colleges resource helping prospective students apply to and pay for college.",
+    "crawl_urls": "",
+    "dont_crawl_urls": "",
+    "crawl_depth": 1,
+    "crawl_width": 1
+    },
+
+    {
+    "seed_url": "https://www.communitycollegereview.com/",
+    "storage_folder": "ccreview",
+    "organization": "Community College Review",
+    "about": "Since 2003, Community College Review has been providing rigorous data analysis of community colleges across the USA.",
+    "crawl_urls": "",
+    "dont_crawl_urls": "",
+    "crawl_depth": 1,
+    "crawl_width": 1
+    }
+]
