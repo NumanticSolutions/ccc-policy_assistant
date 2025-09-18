@@ -13,6 +13,7 @@ import asyncio
 utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
 sys.path.insert(0, utils_path)
 from utilities.logging.logging_utils import LoggingUtils
+from utilities.osa_tools.authentication import ApiAuthentication
 
 # Tools for crawling
 sys.path.insert(0, "crawl_tools/")
@@ -21,13 +22,18 @@ import web_scraper as ws
 import webfile_downloader as wfd
 import web_crawler as wc
 
+api_configs = ApiAuthentication(client="CCC")
+
 
 if __name__ == "__main__":
 
+
     ### Step 1: Initialize and start the logger
     log_modes = ["screen", "file", "gcp"]
+    # log_modes = ["file", "gcp"]
     logging_utils = LoggingUtils(log_modes=log_modes,
                                  logs_file_path="data/logs")
+
 
     # Start logger
     date_format = "%Y%m%d"
@@ -51,45 +57,31 @@ if __name__ == "__main__":
                             )
 
     ### Step 2: Create a crawling configuration file
-    crawl_sources = ["numantic"]
-    mask = crwl_cnfg.df_cp["storage_folder"].isin(crawl_sources)
+    # mask = (crwl_cnfg.df_cp["storage_folder"].str.find("_col") < 0) & \
+    #                 (crwl_cnfg.df_cp["storage_folder"].str.find("_brd") < 0) & \
+    #                     (crwl_cnfg.df_cp["storage_folder"].str.find("wikipedia") < 0)
 
-    # Close the logger
+    mask = crwl_cnfg.df_cp["storage_folder"].isin(['aacc', 'ecs', 'ipeds', 'calmatters', 'ican', 'ccreview'])
+
+            # Close the logger
     logging_utils.close_logger()
 
     async def main():
 
-        for idx in tqdm(crwl_cnfg.df_cp[mask].index):
+        for idx in tqdm(crwl_cnfg.df_cp[mask].index, disable=True):
 
-            # evt_msg = "crawling source: {}".format(crwl_cnfg.df_cp.loc[idx, "storage_folder"])
-            # logging_utils.log_event(logger=logger,
-            #                         log_entry=dict(file=os.path.basename(__file__),
-            #                                        # Examples of possible logged values
-            #                                        event=evt_msg
-            #                                        )
-            #                         )
-
-            # self.bq_table_name = ""
-            # self.bq_if_exists = ""
-
-            # seed_url: str,
-            # source_index: str,
-            # save_location: str,
-            # log_crawls: bool = True,
-
-            # crawler = wc.webCrawler(seed_url=crwl_cnfg.df_cp.loc[idx, "seed_url"],
-            #                         source_index=crwl_cnfg.df_cp.loc[idx, "storage_folder"],
-            #                         gcp_project_id=os.environ["GOOGLE_CLOUD_PROJECT"],
-            #                         log_crawls=True,
-            #                         gcs_directory="crawl_data/{}".format(crwl_cnfg.df_cp.loc[idx, "storage_folder"]),
-            #                         logfile_name=logfile_name)
             crawler = wc.webCrawler(seed_url=crwl_cnfg.df_cp.loc[idx, "seed_url"],
                                     source_index=crwl_cnfg.df_cp.loc[idx, "storage_folder"],
                                     log_crawls=True,
+                                    log_modes=log_modes,
+                                    organization=dict(name=crwl_cnfg.df_cp.loc[idx, "organization"],
+                                                      about=crwl_cnfg.df_cp.loc[idx, "about"]
+                                                      ),
                                     save_location="bq",
                                     gcp_project_id=os.environ["GOOGLE_CLOUD_PROJECT"],
                                     bq_dataset_id="ccc_polasst",
                                     bq_table_name="crawl_text",
+                                    gcs_bucket_name="ccc-crawl_data_sp",
                                     bq_if_exists="append",
                                     logfile_name=logfile_name)
             crlres = await crawler.crawl_sites(dont_crawl_urls=crwl_cnfg.df_cp.loc[idx, "dont_crawl_urls"].split(";"),

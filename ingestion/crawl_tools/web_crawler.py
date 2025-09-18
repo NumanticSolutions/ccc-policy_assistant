@@ -11,6 +11,7 @@ import time
 
 import pandas as pd
 from urllib.parse import urlparse
+import validators
 
 import random
 from tqdm import tqdm
@@ -64,7 +65,7 @@ class webCrawler:
         self.dtformat = "%Y-%m-%d %H:%M:%S"
 
         # Sleep time between crawls (secs)
-        self.wait_time = 5
+        self.wait_time = 2
 
         # Save threshold - crawler will save results in batches of this size
         self.save_threshold = 100
@@ -104,11 +105,12 @@ class webCrawler:
 
         # Other parameters
         self.log_crawls = log_crawls
-        self.log_modes = ["screen", "file", "gcp"]
+        self.log_modes = []
         self.logs_file_path = "data/logs"
         self.date_format = "%Y%m%d"
         self.logfile_name = None
         self.organization = ""
+        self.disable_tqdm = True
 
         # Update any key word args
         self.__dict__.update(kwargs)
@@ -162,7 +164,8 @@ class webCrawler:
 
         ## Step 0.25: Set up logging
         if self.log_crawls:
-            evt_msg = "Configuring crawl for seed url: {}".format(self.seed_url)
+            evt_msg = "Configuring crawl for seed url: {}; source: {}".format(self.seed_url,
+                                                                              self.source_index)
             self.logging_utils.log_event(logger=self.logger,
                                          log_entry=dict(file=os.path.basename(__file__),
                                                         event=evt_msg
@@ -187,15 +190,19 @@ class webCrawler:
     
         # Step 2: Start crawling additional sites
         # Use the for loop to count depth
-        for depth_cnt in tqdm(range(1, depth + 1)):
+        for depth_cnt in tqdm(range(1, depth + 1), disable=self.disable_tqdm):
     
             # Step 2.1: Set first crawl list equal to only the seed URL
             if depth_cnt == 1:
                 # Add seed as first URL to crawl
                 to_crawl_urls = [self.seed_url] + crawl_urls
 
+                # Remove any URLs that are invalid
+                to_crawl_urls = [u for u in to_crawl_urls if validators.url(u)]
+
+
                 if self.log_crawls:
-                    evt_msg = "Depth: {}: 1; Len to_crawl_urls: {}".format(depth_cnt, len(to_crawl_urls))
+                    evt_msg = "Depth: {}: Len to_crawl_urls: {}".format(depth_cnt, len(to_crawl_urls))
                     self.logging_utils.log_event(logger=self.logger,
                                                  log_entry=dict(file=os.path.basename(__file__),
                                                                 event=evt_msg
@@ -212,7 +219,6 @@ class webCrawler:
             found_urls = []
 
             ## Step 2.4: Crawl all randomly selected URLs
-            # print("Depth level: {}: {} URLs".format(depth_cnt, len(r_urls)))
             for r_url in r_urls:
 
                 ## Step 2.5: Check if this URL is on the dont_craw_list
@@ -222,15 +228,18 @@ class webCrawler:
                     if self.is_file_url(r_url) == ".pdf":
 
                         # Read file content
-                        fd_obj = wfd.webFileDownloader(url=r_url)
+                        fd_obj = wfd.webFileDownloader(url=r_url,
+                                                       gcp_project_id=self.gcp_project_id,
+                                                       gcs_bucket_name=self.gcs_bucket_name,
+                                                       )
                         rf_res = fd_obj.read_document()
 
                         ## Step 2.7: Crawl and pause
-                        if rf_res != -1 and len(rf_res) > 0:
+                        if rf_res != -1 and len(fd_obj.pdf_parts_df) > 0:
 
                             # Add this to the dataframe of crawl results
                             idx0 = 0
-                            doc_metadata = json.loads(rf_res.loc[idx0, "src_doc_metadata"])
+                            doc_metadata = json.loads(fd_obj.pdf_parts_df.loc[idx0, "src_doc_metadata"])
 
                             if "title" in doc_metadata and doc_metadata["title"] != "nan":
                                 page_title = doc_metadata["title"]
@@ -243,13 +252,14 @@ class webCrawler:
                                 page_descr = ""
 
                             # Add this content to the dataframe
+                            page_text = tct.clean_web_texts(web_texts=fd_obj.pdf_parts_df["md_text"].tolist())
                             all_sites_results.append(dict(page_url=r_url,
                                                           seed_url=self.seed_url,
                                                           source_index=self.source_index,
                                                           page_title=page_title,
                                                           page_name="",
                                                           page_descr=page_descr,
-                                                          page_text=tct.clean_web_texts(web_texts=t["md_text"].tolist()),
+                                                          page_text=page_text,
                                                           media_type="pdf file",
                                                           language_code="en-US",
                                                           organization=self.organization,
@@ -264,7 +274,9 @@ class webCrawler:
                         # Download file content
                         fd_obj = wfd.webFileDownloader(url=r_url,
                                                        gcp_project_id=self.gcp_project_id,
-                                                       gcs_directory=os.path.join("{}/zipcsv_files".format(self.gcs_directory)))
+                                                       gcs_bucket_name=self.gcs_bucket_name,
+                                                       gcs_directory=os.path.join("{}/zipcsv_files".format(self.gcs_directory))
+                                                       )
                         dd_res = fd_obj.download_document()
 
                         # Add this to the dataframe of crawl results
@@ -326,6 +338,14 @@ class webCrawler:
 
                     ## Step 2.12: Check if results should be saved
                     if self.crawl_results_cnt % self.save_threshold == 0:
+
+                        evt_msg = "Saving crawl results:Len crawl_results_cnt: {}".format(self.crawl_results_cnt)
+                        self.logging_utils.log_event(logger=self.logger,
+                                                     log_entry=dict(file=os.path.basename(__file__),
+                                                                    event=evt_msg
+                                                                    )
+                                                     )
+
                         self.save_results_batch(all_sites_results=all_sites_results)
 
                         # reset results to an empty list
@@ -365,6 +385,21 @@ class webCrawler:
     
         ### Step 2.18:. Save results not already yet saved
         self.save_results_batch(all_sites_results=all_sites_results)
+
+        ### Finish crawl and close logger
+        if self.log_crawls:
+
+            evt_msg = ("Completed crawl for seed url: {}; source: {}; "
+                       "crawl_results_cnt: {} ").format(self.seed_url,
+                                                        self.source_index,
+                                                        self.crawl_results_cnt)
+            self.logging_utils.log_event(logger=self.logger,
+                                         log_entry=dict(file=os.path.basename(__file__),
+                                                        event=evt_msg
+                                                        )
+                                         )
+
+            self.logging_utils.close_logger()
 
     def save_results_batch(self, all_sites_results):
         '''
@@ -406,9 +441,16 @@ class webCrawler:
                                                     gcs_directory="{}/webpages_pdfs".format(self.gcs_directory),
                                                     file_name=res_filename)
 
+                evt_msg = ("Batch {} saved to disk in {}/webpages_pdfs.").format(self.saved_batch_cnt,
+                                                                                 self.gcs_directory)
+
             # Save data in a CSV file
             elif self.save_location == "local":
                 df.to_csv(path_or_buf=os.path.join(self.results_path, res_filename))
+
+                evt_msg = ("Batch {} saved to file {} in local directory {}.").format(self.saved_batch_cnt,
+                                                                                      res_filename,
+                                                                                      self.results_path)
 
             elif self.save_location == "bq":
 
@@ -417,21 +459,24 @@ class webCrawler:
                                             table_name=self.bq_table_name,
                                             project_id=self.gcp_project_id,
                                             if_exists=self.bq_if_exists,
-                                            progress_bar_type=None)
+                                            progress_bar_type=None
+                                            )
 
+                evt_msg = ("Batch {} saved to BigQuery table in {}.{}.").format(self.saved_batch_cnt,
+                                                                                self.bq_dataset_id,
+                                                                                self.bq_table_name)
 
-            ## Update User
-            evt_msg = ("Batch {} saved to disk in {}/webpages_pdfs.").format(self.saved_batch_cnt,
-                                                                                self.gcs_directory)
+            else:
+                evt_msg = ("Files not saved because {} was not recognized; "
+                           "please investigate").format(self.save_location)
+
+            ## Update logs
             self.logging_utils.log_event(logger=self.logger,
                                          log_entry=dict(file=os.path.basename(__file__),
                                                         event=evt_msg
                                                         )
                                          )
 
-        # Close logger
-        if self.log_crawls:
-            self.logging_utils.close_logger()
 
     def is_file_url(self, url):
         '''

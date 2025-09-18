@@ -1,16 +1,5 @@
 [
     {
-    "seed_url":        "https://numanticsolutions.com",
-    "storage_folder":  "numantic",
-    "organization":    "Numantic Solutions",
-    "about":           "Numantic Solutions is a full-stack data consultancy.",
-    "crawl_urls":      "",
-    "dont_crawl_urls": "",
-    "crawl_depth":     1,
-    "crawl_width":     1
-    },
-
-    {
     "seed_url":        "https://en.wikipedia.org/wiki/California_Community_Colleges",
     "storage_folder":  "wikipedia",
     "organization":    "Wikiepedia",

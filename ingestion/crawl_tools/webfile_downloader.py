@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import requests
 from google.cloud import storage
 
-from pypdf import PdfReader
+import pandas as pd
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -82,10 +82,6 @@ class webFileDownloader:
         # Update any key word args
         self.__dict__.update(kwargs)
 
-        # Establish storage names if passed as kwargs
-        self.storage_client = storage.Client(project=self.gcp_project_id)
-        self.bucket = self.storage_client.bucket(self.gcs_bucket_name)
-
         # Check if saving to a local path
         if len(self.file_storage_path) > 0 and os.path.exists(self.file_storage_path):
             self.save_location = "local"
@@ -93,9 +89,13 @@ class webFileDownloader:
         # check if saving to a GCS bucket
         elif len(self.gcp_project_id) > 0:
             self.save_location = "gcs"
+            self.storage_client = storage.Client(project=self.gcp_project_id)
+            self.bucket = self.storage_client.bucket(self.gcs_bucket_name)
 
         # Otherwise assume src_location is a local path
         else:
+            print(self.gcs_bucket_name)
+            print(self.gcp_project_id)
             msg = ("The saving location can not be found. It must be a valid local or GCS bucket."
                    "Please investigate.")
             raise ValueError(msg)
@@ -103,6 +103,7 @@ class webFileDownloader:
         # Get the file basename
         self.filebasename = os.path.basename(urlparse(self.url).path)
         self.file_type = ""
+        self.pdf_parts_df = pd.DataFrame()
 
     def validate_filename(self):
         '''
@@ -213,8 +214,11 @@ class webFileDownloader:
                                            show_progress_bar=self.show_progress_bar_pdfread
                                            )
 
-                return pdf_parts.df
+                # Create a class attribute that contains the results of the file parsing
+                self.pdf_parts_df = pdf_parts.df
+                return 1
 
             except:
+
                 return -1
 
