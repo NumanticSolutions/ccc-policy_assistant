@@ -2,7 +2,7 @@
     {
     "seed_url":        "https://en.wikipedia.org/wiki/California_Community_Colleges",
     "storage_folder":  "wikipedia",
-    "organization":    "Wikiepedia",
+    "organization":    "Wikipedia",
     "about":           "Wikipedia is a free online encyclopedia that anyone can edit, and millions already have.",
     "crawl_urls":      "",
     "dont_crawl_urls": "",
