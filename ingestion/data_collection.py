@@ -14,13 +14,14 @@ utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
 sys.path.insert(0, utils_path)
 from utilities.logging.logging_utils import LoggingUtils
 from utilities.osa_tools.authentication import ApiAuthentication
+from utilities.web_scraping import web_scraper as ws
+from utilities.web_scraping import webfile_downloader as wfd
+from utilities.web_scraping import web_crawler as wc
 
 # Tools for crawling
 sys.path.insert(0, "crawl_tools/")
 from webcrawl_config_creation import CCCWebCrawlConfigCreator
-import web_scraper as ws
-import webfile_downloader as wfd
-import web_crawler as wc
+
 
 api_configs = ApiAuthentication(client="CCC")
 
@@ -57,13 +58,10 @@ if __name__ == "__main__":
                             )
 
     ### Step 2: Create a crawling configuration file
-    # mask = (crwl_cnfg.df_cp["storage_folder"].str.find("_col") < 0) & \
-    #                 (crwl_cnfg.df_cp["storage_folder"].str.find("_brd") < 0) & \
-    #                     (crwl_cnfg.df_cp["storage_folder"].str.find("wikipedia") < 0)
+    mask = (crwl_cnfg.df_cp["storage_folder"].str.find("_col") < 0) & \
+                    (crwl_cnfg.df_cp["storage_folder"].str.find("_brd") < 0)
 
-    mask = crwl_cnfg.df_cp["storage_folder"].isin(['aacc', 'ecs', 'ipeds', 'calmatters', 'ican', 'ccreview'])
-
-            # Close the logger
+    # Close the logger
     logging_utils.close_logger()
 
     async def main():
@@ -81,7 +79,8 @@ if __name__ == "__main__":
                                     gcp_project_id=os.environ["GOOGLE_CLOUD_PROJECT"],
                                     bq_dataset_id="ccc_polasst",
                                     bq_table_name="crawl_text",
-                                    gcs_bucket_name="ccc-crawl_data_sp",
+                                    gcs_bucket_name="ccc-crawl_indata",
+                                    gcs_directory="files",
                                     bq_if_exists="append",
                                     logfile_name=logfile_name)
             crlres = await crawler.crawl_sites(dont_crawl_urls=crwl_cnfg.df_cp.loc[idx, "dont_crawl_urls"].split(";"),
