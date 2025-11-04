@@ -20,7 +20,7 @@ try:
     else:
         utils_path = "/utilities/"
 except:
-    utils_path = "/utilities/"
+    utils_path = "../utilities/"
 sys.path.insert(0, utils_path)
 
 from utilities.osa_tools.authentication import ApiAuthentication

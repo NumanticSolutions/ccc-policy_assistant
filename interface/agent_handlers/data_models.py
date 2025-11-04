@@ -25,3 +25,4 @@ class PolicyReport(BaseModel):
     report_body: str = Field(description="The policy report's main body of content")
     report_references: List[Reference] = Field(description="A list of reference sources for the policy report")
 
+
