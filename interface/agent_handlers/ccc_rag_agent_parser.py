@@ -24,11 +24,16 @@ except:
     utils_path = "../utilities/"
 sys.path.insert(0, utils_path)
 
-from utilities.osa_tools.authentication import ApiAuthentication
-from utilities.text_cleaning import json_tools as jt
-from utilities.text_cleaning import text_cleaning_tools as tct
-from utilities.ai_tools.vertexai.vais_query import QueryVaiSearch
-
+try:
+    from utilities.osa_tools.authentication import ApiAuthentication
+    from utilities.text_cleaning import json_tools as jt
+    from utilities.text_cleaning import text_cleaning_tools as tct
+    from utilities.ai_tools.vertexai.vais_query import QueryVaiSearch
+except:
+    from authentication import ApiAuthentication
+    import json_tools as jt
+    import text_cleaning_tools as tct
+    from vertexai.vais_query import QueryVaiSearch
 
 class RagAgentResults:
     '''

@@ -24,9 +24,14 @@ except:
     utils_path = "/utilities/"
 sys.path.insert(0, utils_path)
 
-from utilities.text_cleaning import json_tools as jt
-from utilities.text_cleaning import text_cleaning_tools as tct
-from utilities.osa_tools.authentication import ApiAuthentication
+try:
+    from utilities.text_cleaning import json_tools as jt
+    from utilities.text_cleaning import text_cleaning_tools as tct
+    from utilities.osa_tools.authentication import ApiAuthentication
+except:
+    import json_tools as jt
+    import text_cleaning_tools as tct
+    from authentication import ApiAuthentication
 
 
 

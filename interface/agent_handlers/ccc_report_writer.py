@@ -23,8 +23,12 @@ except:
     utils_path = "../utilities/"
 sys.path.insert(0, utils_path)
 
-from utilities.osa_tools.authentication import ApiAuthentication
-from utilities.text_cleaning import json_tools as jt
+try:
+    from utilities.osa_tools.authentication import ApiAuthentication
+    from utilities.text_cleaning import json_tools as jt
+except:
+    from authentication import ApiAuthentication
+    import json_tools as jt
 
 from ccc_search_agent_parser import SearchAgentResults
 from ccc_rag_agent_parser import RagAgentResults

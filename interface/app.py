@@ -23,12 +23,14 @@ try:
         utils_path = "/utilities/"
 except:
     utils_path = "/utilities/"
-
 sys.path.insert(0, utils_path)
-from utilities.osa_tools.authentication import ApiAuthentication
-import utilities.logging.response_logger as rl
+try:
+    from utilities.osa_tools.authentication import ApiAuthentication
+    import utilities.logging.response_logger as rl
+except:
+    from authentication import ApiAuthentication
+    import response_logger as rl
 
-sys.path.insert(0, "utilities/")
 import random_questions as rq
 
 # Chatbot
@@ -116,8 +118,7 @@ with st.sidebar:
         st.markdown(links)
 
         st.text("\n")
-        ### ??? st.session_state["bot"].version
-        version_msg = ("Version deployed : " + "Nov 3, 2025")
+        version_msg = ("Version deployed : " + "Nov 4, 2025")
         st.markdown(version_msg)
 
 ### Handle conversations in Streamlit
