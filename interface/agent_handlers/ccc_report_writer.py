@@ -12,12 +12,15 @@ import vertexai
 from vertexai import agent_engines
 
 #### Numantic utilities
-if os.environ['USER'] == 'numantic':
-    utils_path = "/Users/numantic/Documents/GitHub/utilities/.."
-elif os.environ['USER'] == 'stephengodfrey':
-    utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
-else:
-    utils_path = "../utilities/"
+try:
+    if os.environ['USER'] == 'numantic':
+        utils_path = "/Users/numantic/Documents/GitHub/utilities/.."
+    elif os.environ['USER'] == 'stephengodfrey':
+        utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
+    else:
+        utils_path = "/utilities/"
+except:
+    utils_path = "/utilities/"
 sys.path.insert(0, utils_path)
 
 from utilities.osa_tools.authentication import ApiAuthentication
