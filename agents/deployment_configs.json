@@ -1,0 +1,18 @@
+{
+    "rag": {
+        "display_name": "CCC Document Search Agent",
+        "description":  "An agent to search CCC corpus of documents on California community colleges"
+    },
+
+    "search": {
+        "display_name": "Google Search Agent",
+        "description":  "An agent to search the internet using Google"
+    },
+
+    "synthesis": {
+        "display_name": "Synthesis Agent",
+        "description":  "An agent to synthesize content into a research report format to provide to the user"
+    }
+
+}
+
