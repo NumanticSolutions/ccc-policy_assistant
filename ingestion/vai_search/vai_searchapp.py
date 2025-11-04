@@ -8,10 +8,17 @@ import os, sys
 import time
 
 # Numantic utilities
-if os.environ['USER'] == 'numantic':
-    utils_path = "/Users/numantic/Documents/GitHub/utilities/.."
-else:
-    utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
+# Numantic utilities
+try:
+    if 'USER' in os.environ.keys() and os.environ['USER'] == 'numantic':
+        utils_path = "/Users/numantic/Documents/GitHub/utilities/.."
+    elif 'USER' in os.environ.keys() and os.environ['USER'] == 'stephengodfrey':
+        utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
+    else:
+        utils_path = "/utilities/"
+except:
+    utils_path = "/utilities/"
+
 sys.path.insert(0, utils_path)
 from utilities.osa_tools.authentication import ApiAuthentication
 import utilities.google_tools.bigquery_tools as bqt

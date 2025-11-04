@@ -113,12 +113,15 @@ def grant_iam_binding(project_id: str, project_number: str, custom_role_id: str)
 if __name__ == "__main__":
 
     # Numantic utilities
-    if os.environ['USER'] == 'numantic':
-        utils_path = "/Users/numantic/Documents/GitHub/utilities/.."
-    else:
-        utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
-    sys.path.insert(0, utils_path)
-    from utilities.osa_tools.authentication import ApiAuthentication
+    try:
+        if 'USER' in os.environ.keys() and os.environ['USER'] == 'numantic':
+            utils_path = "/Users/numantic/Documents/GitHub/utilities/.."
+        elif 'USER' in os.environ.keys() and os.environ['USER'] == 'stephengodfrey':
+            utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
+        else:
+            utils_path = "/utilities/"
+    except:
+        utils_path = "/utilities/"
 
     # Authenticate
     api_configs = ApiAuthentication(client="CCC")

@@ -15,9 +15,9 @@ import vertexai
 
 # Import authentication object
 try:
-    if os.environ['USER'] == 'numantic':
+    if 'USER' in os.environ.keys() and os.environ['USER'] == 'numantic':
         utils_path = "/Users/numantic/Documents/GitHub/utilities/.."
-    elif os.environ['USER'] == 'stephengodfrey':
+    elif 'USER' in os.environ.keys() and os.environ['USER'] == 'stephengodfrey':
         utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
     else:
         utils_path = "/utilities/"
