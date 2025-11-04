@@ -27,7 +27,7 @@ beautifulsoup4==4.14.2
 bleach==6.2.0
 blinker==1.9.0
 Bottleneck==1.6.0
-# Brotli
+Brotli
 cached-property==1.5.2
 cachetools==6.2.1
 certifi==2025.10.5
@@ -274,8 +274,8 @@ pygsheets==2.0.6
 PyJWT==2.10.1
 PyMuPDF==1.26.5
 pymupdf4llm==0.0.27
-pyobjc-core==12.0
-pyobjc-framework-Cocoa==12.0
+# pyobjc-core==12.0
+# pyobjc-framework-Cocoa==12.0
 pypandoc==1.15
 pyparsing==3.2.5
 pypdf==5.9.0
