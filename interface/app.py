@@ -31,7 +31,12 @@ except:
     from authentication import ApiAuthentication
     import response_logger as rl
 
-import random_questions as rq
+try:
+    import random_questions as rq
+except:
+    utils_path = "utilities/"
+    sys.path.insert(0, utils_path)
+    import random_questions as rq
 
 # Chatbot
 chatbot_path = "agent_handlers/"
@@ -163,10 +168,15 @@ if user_input := st.chat_input("Ask a policy-level question ..."):
         st.markdown(user_input)
 
     # Get the policy assistant's response
-    spinner_msg = "Working ... generating a policy report in response to your query; this can take 30 to 90 seconds."
+    spinner_msg = ("Working ... generating a policy report in response to your query; "
+                   "this can take 1 to 3 minutes.")
+
     with st.chat_message("assistant"):
         with st.spinner(spinner_msg):
-            # --- Key Steps ---
+
+            ### Step 5.05: Get start time
+            ai_starttime = datetime.now()
+
             ### Step 5.1. Call the function
             st.session_state.pol_report_writer.create_policy_report(query=user_input)
 
@@ -179,14 +189,21 @@ if user_input := st.chat_input("Ask a policy-level question ..."):
             #### Step 5.4. Add the structured report (dictionary) to chat history for persistence
             st.session_state.messages.append({"role": "assistant", "content": report_data})
 
+            ### Step 5.45: Get finish time
+            ai_endtime = datetime.now()
+
             ### Step 5.5. Create response logger object parameters
+            gen_time = ai_endtime - ai_starttime
+            comments = ("production ccc streamlit app;"
+                        "report generation time (sec): {}").format(gen_time.total_seconds())
+
             rlog_params = {"query": user_input,
                            "response": json.dumps(report_data),
                            "app": "ccc_policy_assist",
-                           "version": "2511",
+                           "version": "2511_T",
                            "ai": "gemini-2.5-flash",
                            "agent": "synthesis",
-                           "comments": "production ccc streamlit app"}
+                           "comments": comments}
 
             bq_logger = rl.ResponseLogger()
             bq_logger.response_to_bq(rlog_params=rlog_params)

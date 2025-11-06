@@ -178,11 +178,21 @@ class RagAgentResults:
         Method to parse response into the elements of interest
         '''
 
+        # Set labels
+        if self.agent_server == "vertexai_client":
+            grnd_meta_label = "grounding_metadata"
+            grnd_chunks_label = "grounding_chunks"
+            retr_context_label = "retrieved_context"
+
+        elif self.agent_server == "adk_api_server":
+            grnd_meta_label = "groundingMetadata"
+            grnd_chunks_label = "groundingChunks"
+            retr_context_label = "retrievedContext"
+
         self.organizations = []
         self.uris = []
         self.contents = []
         self.transcripts = []
-        dorgs = []
 
         # Get text results
         for event in self.events:
@@ -213,64 +223,56 @@ class RagAgentResults:
                             else:
                                 self.contents.append(tct.clean_contents(intext=txt_dict["text"]))
 
-
             # Find domains and URIs from grounding_metadata
-            if not self.results_structured:
+            if not self.results_structured or self.agent == "rag":
                 try:
-                    for i, gc in enumerate(event["grounding_metadata"]["grounding_chunks"]):
+                    for i, gc in enumerate(event[grnd_meta_label][grnd_chunks_label]):
                         if type(gc) == dict:
                             for key in gc.keys():
-                                if type(gc[key]) == dict and key == "retrieved_context":
+                                if type(gc[key]) == dict and key == retr_context_label:
 
-                                    # Get organizations and transcripts
-                                    pat_org = r"organizations:"
-                                    pat_src = r"source_index:"
-                                    pat_trs = r"transcript:"
-
-                                    fl_txt = gc["retrieved_context"]["text"]
-
-                                    # Find organization
-                                    tores = re.search(pat_org, fl_txt)
-                                    # Find source_index
-                                    tsires = re.search(pat_src, fl_txt)
-                                    # Find transcript
-                                    ttsres = re.search(pat_trs, fl_txt)
-
-                                    # Get organization
-                                    if tores and tsires:
-                                        os = tores.start() + len(pat_org)
-                                        ss = tsires.start()
-                                        dorg = json.loads(json.loads(fl_txt[os:ss]))
-                                        dorgs.append(dorg)
+                                    # Get the full transcript
+                                    fl_txt = gc[retr_context_label]["text"]
 
                                     # Get transcript
-                                    if ttsres:
-                                        transcript = fl_txt[ttsres.start() + len(pat_trs):]
+                                    self.transcripts.append(fl_txt)
+
+                                    # Get organizations and transcripts
+                                    pat_org_name = r"name:"
+                                    pat_page_name = r"page_name:"
+                                    pat_page_url = r"page_url:"
+                                    pat_seed_url = r"seed_url:"
+
+                                    # Find organization name
+                                    onres = re.search(pat_org_name, fl_txt)
+                                    # Find page_name
+                                    pnres = re.search(pat_page_name, fl_txt)
+                                    # Find page_url
+                                    ppres = re.search(pat_page_url, fl_txt)
+                                    # Find seed_url
+                                    sures = re.search(pat_seed_url, fl_txt)
+
+                                    # Get organization name
+                                    if onres and pnres:
+                                        os = onres.start() + len(pat_org_name)
+                                        ss = pnres.start()
+                                        org_name = fl_txt[os:ss].replace("\n", "").strip()
                                     else:
-                                        transcript = ""
+                                        org_name = ""
 
-                                    # get a list of organizations without duplicates
-                                    for org_name in set([org["name"] for org in dorgs]):
-                                        for dorg in dorgs:
-                                            if dorg["name"] == org_name and dorg not in self.organizations:
-                                                self.organizations.append(dorg)
-
-                                    # Add transcripts
-                                    self.transcripts.append(transcript)
-
-                                    # Get the title
-                                    if "title" in gc["retrieved_context"].keys() and len(
-                                            gc["retrieved_context"]["title"]) > 0:
-                                        title = gc["retrieved_context"]["title"]
+                                    # Get page url name
+                                    if ppres and sures:
+                                        os = ppres.start() + len(pat_page_url)
+                                        ss = sures.start()
+                                        page_url = fl_txt[os:ss].replace("\n", "").strip()
                                     else:
-                                        title = dorg["name"]
+                                        page_url = ""
 
-                                    # Add a URI
-                                    self.uris.append(dict(uri_index=i,
-                                                          uri=gc["retrieved_context"]["uri"],
-                                                          uri_text=title
-                                                          )
-                                                     )
+                                    # Get the references
+                                    if len(org_name) > 0 and len(page_url) > 0:
+                                        self.uris.append(dict(uri_text=org_name,
+                                                              uri=page_url)
+                                                         )
 
                 except:
                     pass

@@ -63,7 +63,8 @@ class ReportWriterResults:
         # Values:
         #   rag: Use the RAG agent to search
         #   rag_search_engine: Search the Vertex AI Engine directly
-        self.va_search_tool = "rag_search_engine"
+        # self.va_search_tool = "rag_search_engine"
+        self.va_search_tool = "rag"
 
         # Google search agent name
         self.gs_agent_name = "search"
@@ -179,19 +180,32 @@ class ReportWriterResults:
 
         ### Step 3.1: get VA references
         ##### Note this assumes the VA search engine results are structured
-        df_va = self.va_agent.search_engine_results_df
-        for idx in df_va.index:
-            org = json.loads(df_va.loc[idx, "organization"])
-            references.append(dms.Reference(organization=org["name"],
-                                            uri=df_va.loc[idx, "page_url"]))
+        if len(self.va_agent.uris) > 0:
+            for va in self.va_agent.uris:
+                references.append(dms.Reference(organization=va["uri_text"],
+                                                uri=va["uri"]))
 
-        ### Step 3.2: get GS references
+                va_text = "Summary: {}. Transcripts: {}".format(self.va_agent.contents,
+                                                                self.va_agent.transcripts)
+
+        elif len(self.va_agent.search_engine_results_df) > 0:
+            df_va = self.va_agent.search_engine_results_df
+            for idx in df_va.index:
+                org = json.loads(df_va.loc[idx, "organization"])
+                references.append(dms.Reference(organization=org["name"],
+                                                uri=df_va.loc[idx, "page_url"]))
+
+        ### Step 3.2: Get GS references
         for gc in self.gs_agent.uris:
             references.append(dms.Reference(organization=gc["uri_text"],
                                             uri=gc["uri"]))
 
+        ### Step 3.8. Get GS text
+        gs_text = self.gs_agent.contents
+
         ### Step 4. Get VA and GS text
-        va_gs_text = ". ".join(df_va["clean_headings_text"].tolist() + self.gs_agent.contents)
+        va_gs_text = "{}. {}. ".format(va_text,
+                                       gs_text)
 
         ### Step 4. Create input data model
         input_material = dms.InputContent(report_material=va_gs_text,
