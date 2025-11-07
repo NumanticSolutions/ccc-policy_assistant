@@ -79,6 +79,12 @@ class ReportWriterResults:
         # Users's query
         self.user_id = user_id
 
+        # Expected output - JSON
+        self.report_dict = dict(report_title="",
+                                report_executive_summary="",
+                                report_body="",
+                                report_references="")
+
         # Synthesis agent resource
         # Vertex AI deployed agent
         self.synthesis_resource_name = "projects/1037997398259/locations/us-central1/reasoningEngines/5789082651868528640"
@@ -161,62 +167,84 @@ class ReportWriterResults:
         Method to respond to a user's query
         '''
 
-        ### Step 1. Get RAG Vertex AI search results of web text
-        self.va_agent = RagAgentResults(agent=self.va_search_tool,
-                                        query=query,
-                                        user_id=self.user_id,
-                                        session_id=self.session_id,
-                                        agent_server=self.agent_server)
-
-        ### Step 2. Get Google search results
-        self.gs_agent = SearchAgentResults(agent=self.gs_agent_name,
-                                           query=query,
-                                           user_id=self.user_id,
-                                           session_id=self.session_id,
-                                           agent_server=self.agent_server)
-
-        ### Step 3. Get VA and GS references into a data model
+        ### Step 1. Set parameters
         references = []
 
-        ### Step 3.1: get VA references
-        ##### Note this assumes the VA search engine results are structured
-        if len(self.va_agent.uris) > 0:
-            for va in self.va_agent.uris:
-                references.append(dms.Reference(organization=va["uri_text"],
-                                                uri=va["uri"]))
+        ### Step 2. Get RAG Vertex AI search results of web text
+        try:
+            va_text = ""
+            self.va_agent = RagAgentResults(agent=self.va_search_tool,
+                                            query=query,
+                                            user_id=self.user_id,
+                                            session_id=self.session_id,
+                                            agent_server=self.agent_server)
+
+            ### Step 2.1: get text - expected to be output of RAG agent
+            if len(self.va_agent.contents) > 0 or len(self.va_agent.transcripts) > 0:
 
                 va_text = "Summary: {}. Transcripts: {}".format(self.va_agent.contents,
-                                                                self.va_agent.transcripts)
+                                                            self.va_agent.transcripts)
 
-        elif len(self.va_agent.search_engine_results_df) > 0:
-            df_va = self.va_agent.search_engine_results_df
-            for idx in df_va.index:
-                org = json.loads(df_va.loc[idx, "organization"])
-                references.append(dms.Reference(organization=org["name"],
-                                                uri=df_va.loc[idx, "page_url"]))
+            ### Step 2.3: get references - expected to be output of RAG agent
+            if len(self.va_agent.uris) > 0:
+                for va in self.va_agent.uris:
+                    references.append(dms.Reference(organization=va["uri_text"],
+                                                    uri=va["uri"]))
 
-        ### Step 3.2: Get GS references
-        for gc in self.gs_agent.uris:
-            references.append(dms.Reference(organization=gc["uri_text"],
-                                            uri=gc["uri"]))
+            ### Step 2.3: add references
+            if len(self.va_agent.search_engine_results_df) > 0:
+                df_va = self.va_agent.search_engine_results_df
+                try:
+                    for idx in df_va.index:
+                        org = json.loads(df_va.loc[idx, "organization"])
+                        references.append(dms.Reference(organization=org["name"],
+                                                        uri=df_va.loc[idx, "page_url"]))
+                except:
+                    pass
 
-        ### Step 3.8. Get GS text
-        gs_text = self.gs_agent.contents
+                va_text = "{}. {}.".format(va_text,
+                                           df_va["clean_headings"])
+        except:
+            pass
 
-        ### Step 4. Get VA and GS text
+        ### Step 3. Get Google search results
+        gs_text = ""
+        try:
+            self.gs_agent = SearchAgentResults(agent=self.gs_agent_name,
+                                               query=query,
+                                               user_id=self.user_id,
+                                               session_id=self.session_id,
+                                               agent_server=self.agent_server)
+
+            ### Step 3.1: Get GS references
+            try:
+                for gc in self.gs_agent.uris:
+                    references.append(dms.Reference(organization=gc["uri_text"],
+                                                    uri=gc["uri"]))
+            except:
+                pass
+
+            ### Step 3.2. Get GS text
+            gs_text = self.gs_agent.contents
+
+        except:
+            pass
+
+        ### Step 4. Combine VA and GS text
         va_gs_text = "{}. {}. ".format(va_text,
                                        gs_text)
 
-        ### Step 4. Create input data model
-        input_material = dms.InputContent(report_material=va_gs_text,
-                                          report_references=references)
-        self.query = input_material.model_dump_json()
+        ### Step 4. Create input data model - only continue if some text returned by agents
+        if len(va_gs_text) > 0:
+            input_material = dms.InputContent(report_material=va_gs_text,
+                                              report_references=references)
+            self.query = input_material.model_dump_json()
 
-        ### Step 5. Call the synthesis agent
-        self.call_synthesis_agent()
+            ### Step 5. Call the synthesis agent
+            self.call_synthesis_agent()
 
-        ### Step 6. Parse agent's reponse
-        self.parse_synthesis_response()
+            ### Step 6. Parse agent's reponse
+            self.parse_synthesis_response()
 
     def parse_synthesis_response(self):
         '''
@@ -229,17 +257,18 @@ class ReportWriterResults:
         contents = []
 
         # Get text results
-        for event in self.events:
-            if type(event) == dict:
-                for key in event.keys():
-                    if type(event[key]) == dict and key == "content":
-                        for txt_dict in event[key]["parts"]:
-                            contents.append(txt_dict["text"])
-
         try:
-            self.report_dict = jt.extract_json(text=contents[0])
+            for event in self.events:
+                if type(event) == dict:
+                    for key in event.keys():
+                        if type(event[key]) == dict and key == "content":
+                            for txt_dict in event[key]["parts"]:
+                                contents.append(txt_dict["text"])
+
+                self.report_dict = jt.extract_json(text=contents[0])
+
         except:
-            self.report_dict = {}
+            pass
 
 
 
