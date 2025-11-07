@@ -7,7 +7,17 @@
 ## Policy Assistant V3 Overview
 
 ### Application Summary
-This is an experimental, open-source chatbot employing Artificial Intelligence tools to help users easily improve their understanding of policy topics related to California's community colleges. The bot's target audience are stakeholders who would like to participate in community college decision making and would benefit from curated and detailed information related to community colleges. Some examples might include board members, administrators, staff, students, community activists or legislators.
+This is an experimental, open-source policy-writing chatbot employing Artificial Intelligence tools to help users easily improve their understanding of policy topics related to California's community colleges. 
+
+For demonstration purposes, consider the policy report writer's target audience to be stakeholders who would like to participate in community college decision making and would benefit from well-researched information related to community colleges. Some examples might include board members, administrators, staff, students, community activists or legislators.
+
+However, the project's primary purpose is demonstrate that with a manageable effort level, teams can 
+1. Collect and curate unique datasets
+2. Leverage those datasets in powerful AI applications.
+
+### Policy Report Writer (versus a chatbot)
+
+This AI tool has been designed to generate through research reports in response to complex policy queries. It, for example, is intended to address a question such as `How does proposition 98 affect California community college funding?` by providing an executive summary, report body and references. Users will still get that output even if the query could be simply answered. The question ` What year was Barstow Community College founded?` will, by design, produce a multi-paragraph response even though `Barstow College was founded in 1959` might suffice. In one example response, the report writer ran with the `Barstow founding` question and produced a report titled: `Barstow Community College: An Overview of Its History, Programs, and Services.`
 
 ### Production Deployments
 | **Live Policy Assistant Chatbot**                                                                                                                                                                                                                                        | **Example Queries and Responses**                                                                                                                                                                                                                                                                        |
@@ -20,8 +30,10 @@ By making this tool available, we hope to demonstrate how policy advocacy can be
 
 If you want to learn more or have thoughts about this application or similar tools or the underlying technology, please reach out.
 
-Nov 6, 2025
-Version: 2025110
+#### Version 
+- V3: 20251106
+- Nov 6, 2025 
+
 
 ## Contact
 
@@ -31,7 +43,7 @@ Please reach out to Steve or Nathan
 ## Workflow Architecture
 
 We're still working on the tool, but here is a broad overview of Version 2's workflow components.
-<img src="./data/images/CCC_workflow_Aug_2025_v2.png" alt="Workflow Pipeline" width="1200"/>
+<img src="./data/images/CCC_workflow_Nov_2025_v3.png" alt="Workflow Pipeline" width="1200"/>
 
 ## Technology
 
@@ -48,12 +60,32 @@ Although this tool is underdevelopment and its technological components are like
 
 ### Quick Start
 
-1. Ensure your environment has all the necessary files. We use [Anaconda](https://www.anaconda.com/) to create virtual environments. In this repo, the Conda configuration file can be found in `data\environment\environment_adk.yml`.
+1. Ensure your environment has all the necessary files. We use [Anaconda](https://www.anaconda.com/) to create virtual environments. In this repo, the Conda configuration file can be found in `data\environment\environment_ns_research.yml`.
 2. To see the bot in action on a local machine, run the following command line script: `streamlit run app.py` from the `interface` directory.
 
-## What's Next?
+## What's in the Repo?
 
-This repo is still under development, and we still need to add the code used in the following steps: 
+This repo contains the full data pipeline code. This covers data ingestion through web crawling, AI agent creation and application deployment in a user interface.
 
-1. Ingesting web data
+Code is organized by task and saved in subdirectories with key folders highlighted below.
+
+```
+ccc-policy_assistant/
+│
+├── agents/  ---> Agent development
+│   └── ccc_policybot
+│       ├── rag
+│       ├── search
+│       └── synthesis
+├── ingestion/  ---> Data collection
+│   └── ccc_policybot
+│       ├── crawl_tools
+│       ├── data
+│       └── vai_search
+├── interface/  ---> USer interface
+│   ├── agent_handlers
+│   ├── data
+│   ├── utilities
+```
+
 
