@@ -6,8 +6,11 @@
 import streamlit as st
 import pandas as pd
 import re
+import json
+from datetime import datetime
 
-
+### Step 1.6. Set parameters
+time_fmt = "%Y%m%d_%H%M%S"
 
 def display_report(report_data: dict):
     """
@@ -113,3 +116,78 @@ def validate_markdown(markdown_content: str) -> list:
                     f"Line {i + 1}: Odd number of bold/italic markers ('**' or '*') suggests unclosed formatting.")
 
     return issues
+
+
+def format_download_content(messages: list) -> str:
+    """
+    Converts the session state messages into a single, structured string
+    suitable copying into a rich text editor.
+
+    Args:
+        messages (list): st.session_state.messages list.
+
+    Returns:
+        str: The complete conversation formatted in Markdown.
+    """
+    export_content = [f"CCC Policy Assistant Conversation Export - {datetime.now().strftime(time_fmt)}\n"]
+
+    for i, message in enumerate(messages):
+        role = message["role"].capitalize()
+        content = message["content"]
+
+        # Add a clear section heading for each turn
+        export_content.append(f"\n---\n\n Turn {i + 1}: {role} Message\n")
+
+        if role == "Assistant":
+            # If the content is the structured report (dictionary), embed the
+            # contents using a modified version of the display_report logic.
+            if isinstance(content, dict):
+                report_data = content
+
+                # 1. Title
+                export_content.append("\nTitle\n")
+                title = report_data.get('report_title', 'Report Title Not Found')
+                export_content.append(clean_report_text(title))
+
+                # 2. Executive Summary
+                exe_sum = report_data.get('report_executive_summary', 'Summary not available.')
+                export_content.append("\nExecutive Summary\n")
+                export_content.append(clean_report_text(exe_sum))
+
+                # 3. Report Body (Full Markdown content)
+                full_body = report_data.get('report_body', 'Report body content not available.')
+                export_content.append("\nFull Report Body\n")
+                export_content.append(clean_report_text(full_body))
+
+                # 4. References
+                export_content.append("\References\n")
+                references = report_data.get('report_references', [])
+                if references:
+                    # Format references into a readable Markdown list
+                    ref_list = "\n".join([
+                        f"Source: {ref.get('uri_text', 'N/A')}\n  URI: {ref.get('uri', 'N/A')}"
+                        for ref in references
+                    ])
+                    export_content.append(ref_list)
+                else:
+                    export_content.append("No references found for this report.")
+
+            else:
+                # Fallback for simple assistant text messages
+                export_content.append(content)
+
+        else:
+            # User messages are simple Markdown
+            export_content.append(content)
+
+    return "\n".join(export_content)
+
+
+def clean_report_text(intext: str):
+    """
+    Function to clean markdown characters from report content text.
+    :param intext:
+    :return:
+    """
+
+    return intext.replace("*", "").replace("#", "").strip()
