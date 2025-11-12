@@ -74,7 +74,7 @@ class SearchAgentResults:
 
         # Set up agent resources
         # Vertex AI deployed agent
-        self.search_agent_resource_name = "projects/1037997398259/locations/us-central1/reasoningEngines/2453041227893833728"
+        self.search_agent_resource_name = "projects/1037997398259/locations/us-central1/reasoningEngines/3857627749959073792"
 
         # Local FastAPI development server
         self.session_url = f"http://localhost:8000/apps/{self.agent}/users/{self.user_id}/sessions/{self.session_id}"

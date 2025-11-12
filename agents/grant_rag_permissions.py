@@ -119,11 +119,14 @@ if __name__ == "__main__":
         elif 'USER' in os.environ.keys() and os.environ['USER'] == 'stephengodfrey':
             utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
         else:
-            utils_path = "/utilities/"
+            utils_path = "utilities/"
     except:
-        utils_path = "/utilities/"
+        utils_path = "utilities/"
+
+    sys.path.insert(0, utils_path)
 
     # Authenticate
+    from utilities.osa_tools.authentication import ApiAuthentication
     api_configs = ApiAuthentication(client="CCC")
 
     project_id = os.getenv("GOOGLE_CLOUD_PROJECT")

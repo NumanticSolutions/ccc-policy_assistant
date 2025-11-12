@@ -49,10 +49,7 @@ def deploy(agent_index: str,
     '''
 
     # Set environment variables
-    env_vars = dict(GOOGLE_API_KEY=os.environ["GOOGLE_API_KEY"],
-                    GOOGLE_GENAI_USE_VERTEXAI=os.environ["GOOGLE_GENAI_USE_VERTEXAI"],
-                    STAGING_BUCKET=os.environ["STAGING_BUCKET"],
-                    GOOGLE_CLOUD_PROJECT_ID=os.environ["GOOGLE_CLOUD_PROJECT_ID"]
+    env_vars = dict(GOOGLE_CLOUD_PROJECT_ID=os.environ["GOOGLE_CLOUD_PROJECT_ID"]
                     )
 
     # Set parameters
@@ -61,21 +58,18 @@ def deploy(agent_index: str,
     description = deploy_configs[agent_index]["description"]
 
     # Set an ADK App
-    app = AdkApp(agent=root_agent,
-                 enable_tracing=True,
-                 )
+    app = AdkApp(agent=root_agent)
 
     # Create the agent resource
     remote_app = agent_engines.create(
         app,
         requirements=[
-            "google-cloud-aiplatform[agent_engines,adk,langchain,ag2,llama_index,evaluation]==1.120.0",
-            "google-adk==1.16.0",
-            "google-cloud-discoveryengine==0.13.12",
-            "cloudpickle==3.1.1",
-            "pydantic==2.12.3",
-            "python-dotenv==1.1.1",
-            "google-auth==2.41.1"
+            "google-cloud-aiplatform[agent_engines,adk,ag2,llama_index,evaluation]",
+            "google-adk",
+            "google-cloud-discoveryengine",
+            "google-auth",
+            "cloudpickle",
+            "pydantic"
         ],
         extra_packages=[
             "ccc_policybot",
@@ -83,7 +77,11 @@ def deploy(agent_index: str,
         gcs_dir_name=os.environ["STAGING_BUCKET"],
         display_name=display_name,
         description=description,
-        env_vars=env_vars
+        env_vars=env_vars,
+        min_instances=2,
+        max_instances=5,
+        resource_limits={"cpu": "4", "memory": "8Gi"},
+        container_concurrency=36
     )
 
     # log remote_app
@@ -96,12 +94,6 @@ def delete(resource_id: str) -> None:
     remote_agent = agent_engines.get(resource_id)
     remote_agent.delete(force=True)
     print(f"Deleted remote agent: {resource_id}")
-
-
-def list(resource_id: str) -> None:
-    '''
-    Function to list all existing agent resources
-    '''
 
 
 def main():

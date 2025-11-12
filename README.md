@@ -31,8 +31,8 @@ By making this tool available, we hope to demonstrate how policy advocacy can be
 If you want to learn more or have thoughts about this application or similar tools or the underlying technology, please reach out.
 
 #### Version 
-- V3: 20251108
-- Nov 8, 2025 
+- V3: 20251112
+- Nov 12, 2025 
 
 
 ## Contact

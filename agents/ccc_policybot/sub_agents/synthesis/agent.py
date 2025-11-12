@@ -9,9 +9,13 @@ from google.adk.agents import Agent
 from . import prompt
 from . import data_models as dms
 
-# Authentication tools
-if "GOOGLE_API_KEY" not in os.environ.keys():
-    utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
+# Authentication tools - needed for local testing
+if 'USER' in os.environ.keys():
+    if os.environ['USER'] == 'numantic':
+        utils_path = "/Users/numantic/Documents/GitHub/utilities/.."
+    elif os.environ['USER'] == 'stephengodfrey':
+        utils_path = "/Users/stephengodfrey/Documents/Workbench/Numantic/utilities/.."
+
     sys.path.insert(0, utils_path)
     from utilities.osa_tools.authentication import ApiAuthentication
     api_configs = ApiAuthentication(client="CCC")

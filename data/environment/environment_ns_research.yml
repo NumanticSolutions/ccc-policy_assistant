@@ -13,8 +13,8 @@ dependencies:
   - tesseract
 
   - pip:
-      - google-cloud-aiplatform[agent_engines,adk,langchain,ag2,llama_index,evaluation]==1.120.0
-      - google-adk==1.16.0
+      - google-cloud-aiplatform[agent_engines,adk,ag2,llama_index,evaluation]==1.126.1
+      - google-adk==1.18.0
       - google-cloud-discoveryengine==0.13.12
       - google-cloud-bigquery-storage==2.33.1
       - google-cloud-translate==3.21.1
