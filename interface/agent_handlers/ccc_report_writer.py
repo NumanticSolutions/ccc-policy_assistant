@@ -87,7 +87,7 @@ class ReportWriterResults:
 
         # Synthesis agent resource
         # Vertex AI deployed agent
-        self.synthesis_resource_name = "projects/1037997398259/locations/us-central1/reasoningEngines/2896109229515472896"
+        self.synthesis_resource_name = "projects/1037997398259/locations/us-central1/reasoningEngines/4851234417747689472"
 
         # Local FastAPI development server
         self.session_url = f"http://localhost:8000/apps/{self.agent}/users/{self.user_id}/sessions/{self.session_id}"

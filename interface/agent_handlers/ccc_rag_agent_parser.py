@@ -72,7 +72,7 @@ class RagAgentResults:
 
         # Set up agent resources
         # Vertex AI deployed agent
-        self.rag_agent_resource_name = "projects/1037997398259/locations/us-central1/reasoningEngines/6067206317137723392"
+        self.rag_agent_resource_name = "projects/1037997398259/locations/us-central1/reasoningEngines/4031016335612837888"
 
         # Local FastAPI development server
         self.session_url = f"http://localhost:8000/apps/{self.agent}/users/{self.user_id}/sessions/{self.session_id}"

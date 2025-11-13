@@ -74,7 +74,7 @@ class SearchAgentResults:
 
         # Set up agent resources
         # Vertex AI deployed agent
-        self.search_agent_resource_name = "projects/1037997398259/locations/us-central1/reasoningEngines/3857627749959073792"
+        self.search_agent_resource_name = "projects/1037997398259/locations/us-central1/reasoningEngines/1516318893679837184"
 
         # Local FastAPI development server
         self.session_url = f"http://localhost:8000/apps/{self.agent}/users/{self.user_id}/sessions/{self.session_id}"
@@ -183,17 +183,20 @@ class SearchAgentResults:
                             self.contents.append(tct.clean_contents(intext=txt_dict["text"]))
 
             # Find domains and URIs from grounding_metadata
-            uri_index = 0
-            for gc in event[grnd_meta_label][grnd_chunks_label]:
-                for key in gc.keys():
-                    if key == "web":
-                        if "domain" in gc["web"].keys() and "uri" in gc["web"].keys():
-                            self.domains.append(gc["web"]["domain"])
-                            self.uris.append(dict(uri_index=uri_index,
-                                                  uri=gc["web"]["uri"],
-                                                  uri_text=gc["web"]["domain"])
-                                             )
-                            uri_index += 1
+            try:
+                uri_index = 0
+                for gc in event[grnd_meta_label][grnd_chunks_label]:
+                    for key in gc.keys():
+                        if key == "web":
+                            if "domain" in gc["web"].keys() and "uri" in gc["web"].keys():
+                                self.domains.append(gc["web"]["domain"])
+                                self.uris.append(dict(uri_index=uri_index,
+                                                      uri=gc["web"]["uri"],
+                                                      uri_text=gc["web"]["domain"])
+                                                 )
+                                uri_index += 1
+            except:
+                pass
 
         self.domains = list(set(self.domains))
 
