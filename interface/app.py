@@ -133,7 +133,7 @@ columns = st.columns(3)
 
 ### Step 4.1. Add example links button
 columns[0].link_button(label="Example Reports",
-                       url="https://eternal-bongo-435614-b9.uc.r.appspot.com/example_reports")
+                       url="https://ccc-policy-assistant.uc.r.appspot.com/example_reports")
 
 ### Step 4.2. Add download conversation button
 download_label = "Download Reports"
@@ -180,8 +180,8 @@ with st.sidebar:
         for question in st.session_state.questions:
             st.text("• "+question)
     with tab2:
-        links = ("- [Example Reports](https://eternal-bongo-435614-b9.uc.r.appspot.com/example_reports)\n"
-                 "- [CCC-Bot Analytics](https://eternal-bongo-435614-b9.uc.r.appspot.com/home)\n"
+        links = ("- [Example Reports](https://ccc-policy-assistant.uc.r.appspot.com/example_reports)\n"
+                 "- [CCC-Bot Analytics](https://ccc-policy-assistant.uc.r.appspot.com/home)\n"
                  "- [GitHub](https://github.com/NumanticSolutions/ccc-policy_assistant)\n"
                  "- [Numantic Solutions](https://numanticsolutions.com)\n\n"
                  "- [Terms of Use](https://numanticsolutions.com/#termsofservice)\n"

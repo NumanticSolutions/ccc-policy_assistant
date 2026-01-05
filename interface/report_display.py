@@ -160,7 +160,7 @@ def format_download_content(messages: list) -> str:
                 export_content.append(clean_report_text(full_body))
 
                 # 4. References
-                export_content.append("\References\n")
+                export_content.append("\nReferences\n")
                 references = report_data.get('report_references', [])
                 if references:
                     # Format references into a readable Markdown list
